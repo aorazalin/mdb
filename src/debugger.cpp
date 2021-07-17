@@ -1,7 +1,7 @@
 #include "debugger.hpp"
 #include "helper.hpp"
 
-#include "linenoise/linenoise.h"
+#include "linenoise.h"
 
 #include <sys/wait.h>
 #include <sys/ptrace.h>
