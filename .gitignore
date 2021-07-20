@@ -1,3 +1,5 @@
+# executable thingies
+
 # Prerequisites
 *.d
 
@@ -32,6 +34,11 @@
 *.app
 {"mode":"full","isActive":false}
 
+build/
+[Bb][Uu][Ii][Ll][Dd]/
+
+# CMAKE thingies
+
 CMakeLists.txt.user
 CMakeCache.txt
 CMakeFiles
@@ -45,5 +52,15 @@ CTestTestfile.cmake
 _deps
 {"mode":"full","isActive":false}
 
-build/
-[Bb][Uu][Ii][Ll][Dd]/
+
+# VSCODE thingies
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Local History for Visual Studio Code
+.history/
