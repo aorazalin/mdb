@@ -26,6 +26,10 @@ void Debugger::handle_command(const std::string& line) {
 
     if (is_prefix(command, "continue")) {
         continue_execution();
+    } else if (is_prefix(command, "break")) {
+        std::string addr {args[1], 2}; //TODO: check if the user has 
+                                       // actually written 0xADDRESS in this exact form
+        set_breakpoint(std::stol(addr, 0, 16));
     } else {
         std::cerr << "Unknown command\n";
     }
@@ -36,4 +40,11 @@ void Debugger::continue_execution() {
     int wait_status;
     auto options = 0;
     waitpid(m_pid, &wait_status, options);
+}
+
+void Debugger::set_breakpoint(intptr_t at_addr) {
+    std::cout << "Set breakpoint at address 0x" << std::hex << at_addr << std::endl;
+    Breakpoint bp {m_pid, at_addr};
+    bp.enable();
+    m_breakpoints.insert({at_addr, bp});
 }

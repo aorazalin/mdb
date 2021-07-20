@@ -19,7 +19,6 @@ int main(int argc, char **argv) {
 
     if (pid == 0) {
         // child process --> debuggee
-
         //TODO check ptrace error codes
         ptrace(PTRACE_TRACEME, 0, nullptr, nullptr); // I allow
                                                      // parent process

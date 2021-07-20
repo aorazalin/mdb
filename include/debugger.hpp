@@ -1,4 +1,8 @@
+#include "breakpoint.hpp"
+
 #include <string>
+#include <unordered_map>
+
 
 
 class Debugger {
@@ -12,7 +16,10 @@ public:
 
     void continue_execution();
 
+    void set_breakpoint(intptr_t at_addr);
+
 private:
+    std::unordered_map<intptr_t, Breakpoint> m_breakpoints;
     std::string m_prog_name;
     pid_t m_pid;
 };
