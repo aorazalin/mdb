@@ -44,7 +44,7 @@ void Debugger::continue_execution() {
 
 void Debugger::set_breakpoint(intptr_t at_addr) {
     std::cout << "Set breakpoint at address 0x" << std::hex << at_addr << std::endl;
-    Breakpoint bp {m_pid, at_addr};
+    Breakpoint bp (m_pid, at_addr);
     bp.enable();
     m_breakpoints.insert({at_addr, bp});
 }
