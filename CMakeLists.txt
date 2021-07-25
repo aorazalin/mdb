@@ -3,12 +3,17 @@ project(my-debugger)
 
 add_compile_options(-std=c++14)
 
+
 include_directories(external/linenoise/ include/)
+link_directories(src/)
+
 add_executable(${PROJECT_NAME} src/main.cpp 
                                src/debugger.cpp 
                                src/breakpoint.cpp 
                                src/helper.cpp
                                external/linenoise/linenoise.c)
+
+
 
 add_executable(hello-world examples/hello-world.cpp)
 set_target_properties(hello-world
