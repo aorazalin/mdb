@@ -27,9 +27,12 @@ void Debugger::handle_command(const std::string& line) {
     if (is_prefix(command, "continue")) {
         continue_execution();
     } else if (is_prefix(command, "break")) {
+        if (is_hex_formatted(args[1])) {
         std::string addr {args[1], 2}; //TODO: check if the user has 
-                                       // actually written 0xADDRESS in this exact form
+                                       // actually written 0xADDRESS in this exact for
         set_breakpoint(std::stol(addr, 0, 16));
+        } else 
+            std::cerr << "Invalid address\n";
     } else {
         std::cerr << "Unknown command\n";
     }

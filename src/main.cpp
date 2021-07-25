@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sys/types.h>
 #include <sys/ptrace.h>
+#include <sys/personality.h>
 #include <unistd.h>
 
 #include <linenoise.h>
@@ -20,6 +21,7 @@ int main(int argc, char **argv) {
     if (pid == 0) {
         // child process --> debuggee
         //TODO check ptrace error codes
+        personality(ADDR_NO_RANDOMIZE);
         ptrace(PTRACE_TRACEME, 0, nullptr, nullptr); // I allow
                                                      // parent process
                                                      // to trace me 
