@@ -7,30 +7,30 @@
 #include <sys/ptrace.h>
 #include <iostream>
 
-void Debugger::run() {
+void Debugger::Run() {
     int wait_status;
     auto options = 0;
-    waitpid(m_pid, &wait_status, options); // wait for child process to finish
+    waitpid(m_pid_, &wait_status, options); // wait for child process to finish
 
     char *line = nullptr;
     while ((line = linenoise("minidbg> ")) != nullptr) {
-        handle_command(line);
+        HandleCommand(line);
         linenoiseHistoryAdd(line);
         linenoiseFree(line);
     }
 }
 
-void Debugger::handle_command(const std::string& line) {
-    auto args = split(line, ' ');
+void Debugger::HandleCommand(const std::string& line) {
+    auto args = Split(line, ' ');
     auto command = args[0];
 
-    if (is_prefix(command, "continue")) {
-        continue_execution();
-    } else if (is_prefix(command, "break")) {
-        if (is_hex_formatted(args[1])) {
+    if (IsPrefix(command, "continue")) {
+        ContinueExecution();
+    } else if (IsPrefix(command, "break")) {
+        if (IsHexFormatted(args[1])) {
         std::string addr {args[1], 2}; //TODO: check if the user has 
                                        // actually written 0xADDRESS in this exact for
-        set_breakpoint(std::stol(addr, 0, 16));
+        SetBreakpoint(std::stol(addr, 0, 16));
         } else 
             std::cerr << "Invalid address\n";
     } else {
@@ -38,16 +38,16 @@ void Debugger::handle_command(const std::string& line) {
     }
 }
 
-void Debugger::continue_execution() {
-    ptrace(PTRACE_CONT, m_pid, nullptr, nullptr);
+void Debugger::ContinueExecution() {
+    ptrace(PTRACE_CONT, m_pid_, nullptr, nullptr);
     int wait_status;
     auto options = 0;
-    waitpid(m_pid, &wait_status, options);
+    waitpid(m_pid_, &wait_status, options);
 }
 
-void Debugger::set_breakpoint(intptr_t at_addr) {
+void Debugger::SetBreakpoint(intptr_t at_addr) {
     std::cout << "Set breakpoint at address 0x" << std::hex << at_addr << std::endl;
-    Breakpoint bp (m_pid, at_addr);
-    bp.enable();
-    m_breakpoints.insert({at_addr, bp});
+    Breakpoint bp (m_pid_, at_addr);
+    bp.Enable();
+    m_breakpoints_.insert({at_addr, bp});
 }

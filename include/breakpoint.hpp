@@ -4,17 +4,17 @@
 class Breakpoint {
 public:
     Breakpoint(pid_t pid, intptr_t addr)
-        : m_pid{pid}, m_addr{addr}, m_enabled{false}, m_saved_data{} {}
+        : m_pid_{pid}, m_addr_{addr}, m_enabled_{false}, m_saved_data_{} {}
     
-    void enable();
-    void disable();
+    void Enable();
+    void Disable();
 
-    bool is_enabled() const { return m_enabled; }
-    intptr_t get_address() const { return m_addr; }
+    bool IsEnabled() const { return m_enabled_; }
+    intptr_t GetAddress() const { return m_addr_; }
 
 private:
-    pid_t m_pid; //TODO --- find meanings of these things
-    intptr_t m_addr; //
-    bool m_enabled; // is breakpoint functional
-    uint8_t m_saved_data; // data which used to be at the breakpoint address
+    pid_t m_pid_; //TODO --- find meanings of these things
+    intptr_t m_addr_; //
+    bool m_enabled_; // is breakpoint functional
+    uint8_t m_saved_data_; // data which used to be at the breakpoint address
 };

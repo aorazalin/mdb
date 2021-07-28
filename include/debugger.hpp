@@ -12,11 +12,11 @@ public:
 
     void run();
 
-    void handle_command(const std::string& line);
+    void HandleCommand(const std::string& line);
 
-    void continue_execution();
+    void ContinueExecution();
 
-    void set_breakpoint(intptr_t at_addr);
+    void SetBreakpoint(intptr_t at_addr);
 
 private:
     std::unordered_map<intptr_t, Breakpoint> m_breakpoints;
