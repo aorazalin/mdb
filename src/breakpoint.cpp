@@ -3,13 +3,7 @@
 #include "breakpoint.hpp"
 #include "helper.hpp"
 
-void Breakpoint::Enable() {
-    // auto data = ptrace(PTRACE_PEEKDATA, m_pid, m_addr, nullptr);
-    // m_saved_data = static_cast<uint8_t>(data & 0xff); // bottom byte 
-    // uint64_t int3 = INTERRUPT_COMMAND;
-    // uint64_t data_with_int3 = ((data & ~0xff) | int3); // set bottom byte to 0xcc
-    // ptrace(PTRACE_POKEDATA, m_pid, m_addr, data_with_int3);
-    // m_enabled = true;
+void Breakpoint::enable() {
     auto data = ptrace(PTRACE_PEEKDATA, m_pid_, m_addr_, nullptr);
     m_saved_data_ = static_cast<uint8_t>(data & 0xff); //save bottom byte
     uint64_t int3 = 0xcc;
@@ -19,7 +13,7 @@ void Breakpoint::Enable() {
     m_enabled_ = true;
 }
 
-void Breakpoint::Disable() {
+void Breakpoint::disable() {
     auto data = ptrace(PTRACE_PEEKDATA, m_pid_, m_addr_, nullptr);
     auto restored_data = ((data & ~0xff) | m_saved_data_);
     ptrace(PTRACE_POKEDATA, m_pid_, m_addr_, restored_data);

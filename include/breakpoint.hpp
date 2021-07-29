@@ -6,11 +6,11 @@ public:
     Breakpoint(pid_t pid, intptr_t addr)
         : m_pid_{pid}, m_addr_{addr}, m_enabled_{false}, m_saved_data_{} {}
     
-    void Enable();
-    void Disable();
+    void enable();
+    void disable();
 
-    bool IsEnabled() const { return m_enabled_; }
-    intptr_t GetAddress() const { return m_addr_; }
+    bool isEnabled() const { return m_enabled_; }
+    intptr_t getAddress() const { return m_addr_; }
 
 private:
     pid_t m_pid_; //TODO --- find meanings of these things
