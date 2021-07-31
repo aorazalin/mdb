@@ -3,6 +3,7 @@
 
 class Breakpoint {
 public:
+    Breakpoint() = default;
     Breakpoint(pid_t pid, intptr_t addr)
         : m_pid_{pid}, m_addr_{addr}, m_enabled_{false}, m_saved_data_{} {}
     
