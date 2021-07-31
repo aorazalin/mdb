@@ -9,7 +9,6 @@ void Breakpoint::enable() {
     uint64_t int3 = 0xcc;
     uint64_t data_with_int3 = ((data & ~0xff) | int3); //set bottom byte to 0xcc
     ptrace(PTRACE_POKEDATA, m_pid_, m_addr_, data_with_int3);
-
     m_enabled_ = true;
 }
 
