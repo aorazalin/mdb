@@ -42,7 +42,9 @@ void Debugger::handleCommand(const std::string& line) {
             dumpRegisters();
         }
         else if (isPrefix(args[1], "read")) {
-            std::cout << /*dothis as before with setw*/getRegisterValue(m_pid_, getRegisterFromName(args[2])) << std::endl;
+            std::cout << " 0x"
+                      << std::setfill('0') << std::setw(16) << std::hex
+                      << getRegisterValue(m_pid_, getRegisterFromName(args[2])) << std::endl;
         }
         else if (isPrefix(args[1], "write")) {
             if (isHexNum(args[3])) {
@@ -91,11 +93,11 @@ void Debugger::setBreakpoint(intptr_t at_addr) {
     m_breakpoints_[at_addr] = bp;
 }
 
-//TODO try process_vm_readv, process_vm_writev or /proc/<pid>/mem instead
+//TODO try process_vm_readv, process_vm_writev or /proc/<pid>/mem instead --- to look at larger chunks of data
 uint64_t Debugger::readMemory(uint64_t address) {
     return ptrace(PTRACE_PEEKDATA, m_pid_, address, nullptr);
 }
-//TODO try process_vm_readv, process_vm_writev or /proc/<pid>/mem instead
+//TODO try process_vm_readv, process_vm_writev or /proc/<pid>/mem instead --- to look at larger chunks of data
 void Debugger::writeMemory(uint64_t address, uint64_t value) {
     ptrace(PTRACE_POKEDATA, m_pid_, address, value);
 }
@@ -111,6 +113,7 @@ void Debugger::set_pc(uint64_t pc) {
 void Debugger::stepOverBreakpoint() {
     auto possible_breakpoint_location = get_pc() - 1;
 
+    // if on a breakpoint
     if (m_breakpoints_.count(possible_breakpoint_location)) {
         auto& bp = m_breakpoints_[possible_breakpoint_location];
         

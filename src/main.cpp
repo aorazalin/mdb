@@ -23,8 +23,11 @@ int main(int argc, char **argv) {
     auto prog = argv[1];
 
     auto pid = fork();
-
-    if (pid == 0) {
+    if (pid < 0) {
+        std::cerr << "Forking failed!" << std::endl;
+        exit(1);
+    }
+    else if (pid == 0) {
         // child process --> debuggee
         //TODO check ptrace error codes
         personality(ADDR_NO_RANDOMIZE);
@@ -32,7 +35,8 @@ int main(int argc, char **argv) {
                                                      // parent process
                                                      // to trace me 
         execl(prog, prog, nullptr); // execute (???)
-    } else if (pid >= 1) {
+    }
+    else if (pid >= 1) {
         // parent process --> debugger
         std::cout << "Started debugging process " << pid << std::endl;
         Debugger dbg{prog, pid};
