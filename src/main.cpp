@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     else if (pid == 0) {
         // child process --> debuggee
         //TODO check ptrace error codes
-        personality(ADDR_NO_RANDOMIZE);
+        personality(ADDR_NO_RANDOMIZE); // turn off space randomization
         ptrace(PTRACE_TRACEME, 0, nullptr, nullptr); // I allow
                                                      // parent process
                                                      // to trace me 
