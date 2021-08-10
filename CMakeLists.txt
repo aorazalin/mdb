@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.13.4)
 
 project(my-debugger)
 
-add_compile_options(-std=c++14)
+# add_compile_options(-std=c++14)
 
 include_directories(external/linenoise/ include/)
 link_directories(src/)
