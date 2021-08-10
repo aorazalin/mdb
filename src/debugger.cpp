@@ -41,16 +41,16 @@ void Debugger::handleCommand(const std::string& line) {
             dumpRegisters();
         }
         else if (isPrefix(args[1], "read")) {
-            std::cout << " 0x"
+            std::cout << args[1] << " 0x"
                       << std::setfill('0') << std::setw(16) << std::hex
                       << getRegisterValue(m_pid_, getRegisterFromName(args[2])) << std::endl;
         }
         else if (isPrefix(args[1], "write")) {
             if (isHexNum(args[3])) {
                 std::string val {args[3], 2};
-                setRegisterValue(m_pid_, getRegisterFromName(val), std::stol(val, 0, 16));
+                setRegisterValue(m_pid_, getRegisterFromName(args[2]), std::stol(val, 0, 16)); //TODO CHECKIF args[2] is a valid name for a register?
             } else {
-                std::cerr << "Invalid address format. Should be 0xADDRESS" << std::endl;
+                std::cerr << "Invalid number format. Should be 0xNUMSEQ" << std::endl;
             }
         }
     }
