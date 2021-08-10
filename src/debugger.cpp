@@ -48,6 +48,7 @@ void Debugger::handleCommand(const std::string& line) {
         else if (isPrefix(args[1], "write")) {
             if (isHexNum(args[3])) {
                 std::string val {args[3], 2};
+
                 setRegisterValue(m_pid_, getRegisterFromName(args[2]), std::stol(val, 0, 16)); //TODO CHECKIF args[2] is a valid name for a register?
             } else {
                 std::cerr << "Invalid number format. Should be 0xNUMSEQ" << std::endl;
@@ -134,3 +135,15 @@ void Debugger::waitForSignal() {
     waitpid(m_pid_, &wait_status, options);
 }
 
+//TODO --- add functionality for class methods & function inlining (finding best match if there is nesting)
+//
+//TODO --- write function whichFunctionIamAT
+// for each compile unit:
+//  if the pc is b/w DW_AT_low_pic and DW_AT_high_pc:
+//      for each function in the compilation unit:
+//          if the pc is b/w DW_AT_low_pc and DW_AT_high_pc:
+//              return function info
+
+//TODO --- write a function setBreakpointOnFunction
+//TODO --- setBreakpointOnLine
+//TODO --- readVariableAtMemory

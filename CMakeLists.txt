@@ -23,8 +23,15 @@ add_executable(simpleadd examples/simpleadd.cpp)
 set_target_properties(simpleadd
 	PROPERTIES COMPILE_OPTIONS "-g")
 
-add_executable(couts examples/couts)
+add_executable(cerrs examples/cerrs.cpp)
+set_target_properties(cerrs
+	PROPERTIES COMPILE_OPTIONS "-g")
+
+add_executable(couts examples/couts.cpp)
 set_target_properties(couts
 	PROPERTIES COMPILE_OPTIONS "-g")
 
+add_executable(function examples/function.cpp)
+set_target_properties(function
+	PROPERTIES COMPILE_OPTIONS "-g")
 
