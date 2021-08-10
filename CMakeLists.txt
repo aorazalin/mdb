@@ -15,10 +15,16 @@ add_executable(${PROJECT_NAME} src/main.cpp
 
 
 
-add_executable(hello-world examples/hello-world.cpp)
-set_target_properties(hello-world
+add_executable(hello examples/hello.cpp)
+set_target_properties(hello
 	PROPERTIES COMPILE_OPTIONS "-g")
 
 add_executable(simpleadd examples/simpleadd.cpp)
 set_target_properties(simpleadd
 	PROPERTIES COMPILE_OPTIONS "-g")
+
+add_executable(couts examples/couts)
+set_target_properties(couts
+	PROPERTIES COMPILE_OPTIONS "-g")
+
+

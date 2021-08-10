@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
         ptrace(PTRACE_TRACEME, 0, nullptr, nullptr); // I allow
                                                      // parent process
                                                      // to trace me 
-        execl(prog, prog, nullptr); // execute (???)
+        execl(prog, prog, nullptr); // execute prog
     }
     else if (pid >= 1) {
         // parent process --> debugger

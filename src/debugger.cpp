@@ -30,9 +30,8 @@ void Debugger::handleCommand(const std::string& line) {
     } 
     else if (isPrefix(command, "break")) {
         if (isHexNum(args[1])) {
-        std::string addr {args[1], 2}; //TODO: check if the user has 
-                                       // actually written 0xADDRESS in this exact for
-        setBreakpoint(std::stol(addr, 0, 16));
+            std::string addr {args[1], 2}; // 0xNUMSEQ->NUMSEQ
+            setBreakpoint(std::stol(addr, 0, 16));
         } else {
             std::cerr << "Invalid address format. Should be 0xADDRESS" << std::endl;
         }
