@@ -110,7 +110,8 @@ void Debugger::set_pc(uint64_t pc) {
 }
 
 void Debugger::stepOverBreakpoint() {
-    auto possible_breakpoint_location = get_pc() - 1;
+    auto possible_breakpoint_location = get_pc() - 1; // -1 because PC increments
+                                                      // before execution
 
     // if on a breakpoint
     if (m_breakpoints_.count(possible_breakpoint_location)) {
@@ -123,7 +124,7 @@ void Debugger::stepOverBreakpoint() {
             bp.disable();
             ptrace(PTRACE_SINGLESTEP, m_pid_, nullptr, nullptr);
             waitForSignal();
-            bp.enable();
+            bp.enable(); 
         }
     }
 }

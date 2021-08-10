@@ -7,15 +7,20 @@ public:
     Breakpoint(pid_t pid, intptr_t addr)
         : m_pid_{pid}, m_addr_{addr}, m_enabled_{false}, m_saved_data_{} {}
     
+    // Enable breakpoint
     void enable();
+
+    // Disable breakpoint
     void disable();
 
+    // Is breakpoint on
     bool isEnabled() const { return m_enabled_; }
-    intptr_t getAddress() const { return m_addr_; }
 
+    // Get address
+    intptr_t getAddress() const { return m_addr_; }
 private:
-    pid_t m_pid_; //TODO --- find meanings of these things
-    intptr_t m_addr_; //
-    bool m_enabled_; // is breakpoint functional
-    uint8_t m_saved_data_; // data which used to be at the breakpoint address
+    pid_t m_pid_; // process id
+    intptr_t m_addr_; // id of the breakpoint
+    bool m_enabled_; // is breakpoint "on"
+    uint8_t m_saved_data_; // saved data byte
 };

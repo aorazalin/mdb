@@ -1,7 +1,10 @@
 #include <iostream>
 
 int main () {
-    std::cerr << "Statement one\n";
-    std::cerr << "Statement two\n";
-    std::cerr << "Statement three\n";
+    std::cout << "one\n";
+    std::cout << "two\n";
+    std::cout << "three\n";
+    std::cout << "four\n";
+    std::cout << "five\n";
+    std::cout << "six\n";
 }

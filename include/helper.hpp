@@ -3,8 +3,6 @@
 #include <sstream>
 #include <array>
 
-const uint64_t INTERRUPT_COMMAND = 0xcc;
-
 enum class Reg {
     rax, rbx, rcx, rdx,
     rdi, rsi, rbp, rsp,
@@ -16,11 +14,12 @@ enum class Reg {
     fs, gs, ss, ds, es
 };
 
+// Number of registers
 constexpr std::size_t n_registers = 27;
 
 struct RegDescriptor {
     Reg r;
-    int dwarf_r;
+    int dwarf_r; // DWARF register number (see at https://www.uclibc.org/docs/psABI-x86_64.pdf)
     std::string name;
 };
 
@@ -40,7 +39,7 @@ const std::array<RegDescriptor, n_registers> g_register_descriptors {{
     { Reg::rdx, 1, "rdx" },
     { Reg::rsi, 4, "rsi" },
     { Reg::rdi, 5, "rdi" },
-    { Reg::orig_rax, -1, "orig_rax" },
+    { Reg::orig_rax, -1, "orig_rax" }, // dwarf_r = -1 <==> not applicable
     { Reg::rip, -1, "rip" },
     { Reg::cs, 51, "cs" },
     { Reg::rflags, 49, "eflags" },
@@ -54,19 +53,25 @@ const std::array<RegDescriptor, n_registers> g_register_descriptors {{
     { Reg::gs, 55, "gs" },
 }};
 
+// Return name of the register given Reg object
 std::string getRegisterName(Reg);
 
+// Vice versa
 Reg getRegisterFromName(const std::string &);
 
+// Given process id & Reg value, return value of that register
 uint64_t getRegisterValue(pid_t, Reg);
 
+// Given process id & dwarf_r, return value of that register
 uint64_t getRegisterValueFromDwarfRegister(pid_t, unsigned);
 
+// Given process id and register, set its value to <value>
 void setRegisterValue(pid_t pid, Reg r, uint64_t value);
 
 // Split a string into a list given a delimiter
 std::vector<std::string> split(const std::string &, char);
 
+// Self-explanatory
 bool isPrefix(const std::string &, const std::string &);
 
 // Is a string in format 0xNUMSEQ
