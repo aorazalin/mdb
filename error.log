@@ -1,0 +1,10 @@
+/usr/bin/ld: CMakeFiles/hello-world.dir/examples/hello-world.cpp.o: in function `main':
+/home/alibek/projects/lnxdbg/examples/hello-world.cpp:4: undefined reference to `std::cerr'
+/usr/bin/ld: /home/alibek/projects/lnxdbg/examples/hello-world.cpp:4: undefined reference to `std::basic_ostream<char, std::char_traits<char> >& std::operator<< <std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*)'
+/usr/bin/ld: CMakeFiles/hello-world.dir/examples/hello-world.cpp.o: in function `__cxx_global_var_init':
+/usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/iostream:74: undefined reference to `std::ios_base::Init::Init()'
+/usr/bin/ld: /usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/iostream:74: undefined reference to `std::ios_base::Init::~Init()'
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+make[2]: *** [CMakeFiles/hello-world.dir/build.make:84: hello-world] Error 1
+make[1]: *** [CMakeFiles/Makefile2:107: CMakeFiles/hello-world.dir/all] Error 2
+make: *** [Makefile:84: all] Error 2

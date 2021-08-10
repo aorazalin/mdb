@@ -64,6 +64,7 @@ uint64_t getRegisterValueFromDwarfRegister(pid_t, unsigned);
 
 void setRegisterValue(pid_t pid, Reg r, uint64_t value);
 
+// Split a string into a list given a delimiter
 std::vector<std::string> split(const std::string &, char);
 
 bool isPrefix(const std::string &, const std::string &);

@@ -43,8 +43,6 @@ Reg getRegisterFromName(const std::string &name) {
     return it->r;
 }
 
-
-// gives address of a register 
 uint64_t getRegisterValue(pid_t pid, Reg r) {
     user_regs_struct regs;
     ptrace(PTRACE_GETREGS, pid, nullptr, &regs); // regs --- object that contains
@@ -76,6 +74,7 @@ void setRegisterValue(pid_t pid, Reg r, uint64_t value) {
     ptrace(PTRACE_SETREGS, pid, nullptr, &regs);
 }
 
+// 
 uint64_t getRegisterValueFromDwarfRegister (pid_t pid, unsigned regnum) {
     auto it = std::find_if(begin(g_register_descriptors), 
                            end(g_register_descriptors),
@@ -87,3 +86,5 @@ uint64_t getRegisterValueFromDwarfRegister (pid_t pid, unsigned regnum) {
 
     return getRegisterValue(pid, it->r);
 }
+
+
