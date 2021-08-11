@@ -4,5 +4,4 @@
 
 [submodule "external/libelfin"]
 	path = external/libelfin
-	url = https://github.com/aorazalin/my-debugger.git
-
+	url = https://github.com/aorazalin/libelfin.git
