@@ -13,7 +13,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
                                src/helper.cpp
                                external/linenoise/linenoise.c)
 
-
+														 # set_target_properties(${PROJECT_NAME} # tobecommented
+														 #	PROPERTIES COMPILE_OPTIONS "-g")
 
 add_executable(hello examples/hello.cpp)
 set_target_properties(hello
@@ -33,5 +34,9 @@ set_target_properties(couts
 
 add_executable(function examples/function.cpp)
 set_target_properties(function
+	PROPERTIES COMPILE_OPTIONS "-g")
+
+add_executable(nested-functions examples/nested-functions.cpp)
+set_target_properties(nested-functions
 	PROPERTIES COMPILE_OPTIONS "-g")
 

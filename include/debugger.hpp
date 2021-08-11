@@ -43,6 +43,9 @@ public:
 
     // Wait for signal of debugee 
     void waitForSignal();
+
+    // Which function I am currently at?
+    void whichFunction();
 private:
     std::unordered_map<intptr_t, Breakpoint> m_breakpoints_;
     std::string m_prog_name_;

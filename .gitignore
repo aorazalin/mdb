@@ -68,3 +68,6 @@ _deps
 # Local shell scripts 
 compile.sh
 debug.sh
+
+# my local file to log all errors
+error.log
