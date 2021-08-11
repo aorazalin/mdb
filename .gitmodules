@@ -1,9 +1,8 @@
-[submodule "linenoise"]
-	path = external/linenoise
-	url = https://github.com/antirez/linenoise.git
 [submodule "external/linenoise"]
 	path = external/linenoise
 	url = https://github.com/antirez/linenoise.git
+
 [submodule "external/libelfin"]
 	path = external/libelfin
-	url = https://github.com/aorazalin/libelfin.git
+	url = https://github.com/aorazalin/my-debugger.git
+
