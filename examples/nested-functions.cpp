@@ -14,3 +14,7 @@ int main() {
     long b = 3, c = -2;
     long a = compute(b, c); 
 }
+
+
+//doesn't work if <log> func is an inline function
+//TODO make it work with inline functions

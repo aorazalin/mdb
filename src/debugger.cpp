@@ -135,14 +135,16 @@ void Debugger::waitForSignal() {
     waitpid(m_pid_, &wait_status, options);
 }
 
-//TODO --- add functionality for class methods & function inlining (finding best match if there is nesting)
-//
 //TODO --- write function whichFunctionIamAT
 // for each compile unit:
 //  if the pc is b/w DW_AT_low_pic and DW_AT_high_pc:
 //      for each function in the compilation unit:
 //          if the pc is b/w DW_AT_low_pc and DW_AT_high_pc:
 //              return function info
+
+void Debugger::whichFunction() {
+    
+}
 
 //TODO --- write a function setBreakpointOnFunction
 //TODO --- setBreakpointOnLine

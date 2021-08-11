@@ -3,6 +3,9 @@
 #include <sstream>
 #include <array>
 
+#include "elf++.hh"
+#include "dwarf++.hh"
+
 enum class Reg {
     rax, rbx, rcx, rdx,
     rdi, rsi, rbp, rsp,
@@ -76,3 +79,7 @@ bool isPrefix(const std::string &, const std::string &);
 
 // Is a string in format 0xNUMSEQ
 bool isHexNum(const std::string &);
+
+// which function contain PC
+bool find_pc(const dwarf::die &d, dwarf::taddr pc, std::vector<dwarf::die> *stack);
+

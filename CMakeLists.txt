@@ -4,7 +4,12 @@ project(my-debugger)
 
 # add_compile_options(-std=c++14)
 
-include_directories(external/linenoise/ include/)
+include_directories(external/linenoise/
+										external/libelfin/
+										include/
+										external/libelfin/dwarf
+										external/libelfin/elf)
+
 link_directories(src/)
 
 add_executable(${PROJECT_NAME} src/main.cpp 
@@ -39,4 +44,18 @@ set_target_properties(function
 add_executable(nested-functions examples/nested-functions.cpp)
 set_target_properties(nested-functions
 	PROPERTIES COMPILE_OPTIONS "-g")
+
+# run make in libelfin
+add_custom_target(
+	libelfin
+	COMMAND make
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/external/libelfin
+) 
+
+target_link_libraries(${PROJECT_NAME}
+										  ${PROJECT_SOURCE_DIR}/external/libelfin/dwarf/libdwarf++.so
+											${PROJECT_SOURCE_DIR}/external/libelfin/elf/libelf++.so)
+
+add_dependencies(${PROJECT_NAME} libelfin)
+
 

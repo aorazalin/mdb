@@ -1,10 +1,21 @@
-/usr/bin/ld: CMakeFiles/hello-world.dir/examples/hello-world.cpp.o: in function `main':
-/home/alibek/projects/lnxdbg/examples/hello-world.cpp:4: undefined reference to `std::cerr'
-/usr/bin/ld: /home/alibek/projects/lnxdbg/examples/hello-world.cpp:4: undefined reference to `std::basic_ostream<char, std::char_traits<char> >& std::operator<< <std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char const*)'
-/usr/bin/ld: CMakeFiles/hello-world.dir/examples/hello-world.cpp.o: in function `__cxx_global_var_init':
-/usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/iostream:74: undefined reference to `std::ios_base::Init::Init()'
-/usr/bin/ld: /usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/iostream:74: undefined reference to `std::ios_base::Init::~Init()'
-clang: error: linker command failed with exit code 1 (use -v to see invocation)
-make[2]: *** [CMakeFiles/hello-world.dir/build.make:84: hello-world] Error 1
-make[1]: *** [CMakeFiles/Makefile2:107: CMakeFiles/hello-world.dir/all] Error 2
+In file included from /home/alibek/projects/lnxdbg/src/debugger.cpp:2:
+In file included from /home/alibek/projects/lnxdbg/include/helper.hpp:6:
+In file included from /home/alibek/projects/lnxdbg/external/libelfin/elf/elf++.hh:9:
+/home/alibek/projects/lnxdbg/external/libelfin/elf/data.hh:558:22: error: cannot assign to non-static data member within const member function 'set_binding'
+                info = (info & 0xF) | ((unsigned char)v << 4);
+                ~~~~ ^
+/home/alibek/projects/lnxdbg/external/libelfin/elf/data.hh:556:14: note: member function 'elf::Sym<elf::Elf64, Order>::set_binding' is declared const here
+        void set_binding(stb v) const
+        ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/alibek/projects/lnxdbg/src/debugger.cpp:2:
+/home/alibek/projects/lnxdbg/include/helper.hpp:84:52: error: no template named 'vector'; did you mean 'std::vector'?
+bool find_pc(const dwarf::die &d, dwarf::taddr pc, vector<dwarf::die> *stack);
+                                                   ^~~~~~
+                                                   std::vector
+/usr/bin/../lib/gcc/x86_64-linux-gnu/9/../../../../include/c++/9/bits/stl_vector.h:386:11: note: 'std::vector' declared here
+    class vector : protected _Vector_base<_Tp, _Alloc>
+          ^
+2 errors generated.
+make[2]: *** [CMakeFiles/my-debugger.dir/build.make:76: CMakeFiles/my-debugger.dir/src/debugger.cpp.o] Error 1
+make[1]: *** [CMakeFiles/Makefile2:278: CMakeFiles/my-debugger.dir/all] Error 2
 make: *** [Makefile:84: all] Error 2
