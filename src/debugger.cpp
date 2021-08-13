@@ -1,7 +1,7 @@
+#include "linenoise.h"
+
 #include "debugger.hpp"
 #include "helper.hpp"
-
-#include "linenoise.h"
 
 #include <sys/wait.h>
 #include <sys/ptrace.h>
@@ -9,6 +9,14 @@
 #include <fcntl.h>
 #include <iomanip>
 #include <iostream>
+
+Debugger::Debugger (std::string prog_name, pid_t pid)
+    : m_prog_name_(std::move(prog_name)), m_pid_(pid) {
+        fd = open(m_prog_name_.c_str(), O_RDONLY); //XXX what if program changes?
+        this->ef = elf::elf(elf::create_mmap_loader(fd));
+        this->dw = dwarf::dwarf(dwarf::elf::create_loader(ef));
+ }
+
 
 void Debugger::run() {
     int wait_status;
@@ -51,7 +59,8 @@ void Debugger::handleCommand(const std::string& line) {
             if (isHexNum(args[3])) {
                 std::string val {args[3], 2};
 
-                setRegisterValue(m_pid_, getRegisterFromName(args[2]), std::stol(val, 0, 16)); //TODO CHECKIF args[2] is a valid name for a register?
+                setRegisterValue(m_pid_, getRegisterFromName(args[2]), std::stol(val, 0, 16)); //TODO CHECKIF args[2] 
+                                                                                               // is a valid name for a register?
             } else {
                 std::cerr << "Invalid number format. Should be 0xNUMSEQ" << std::endl;
             }
@@ -150,12 +159,7 @@ void Debugger::waitForSignal() {
 
 void Debugger::whichFunction() {
         dwarf::taddr pc = get_pc();
-
-        int fd = open(m_prog_name_.c_str(), O_RDONLY);
-
-        elf::elf ef(elf::create_mmap_loader(fd));
-        dwarf::dwarf dw(dwarf::elf::create_loader(ef));
-
+        
         // Find the CU containing pc
         // XXX Use .debug_aranges
         for (auto &cu : dw.compilation_units()) {
@@ -182,7 +186,21 @@ void Debugger::whichFunction() {
         }
 }
 
-// void Debugger::whichLine() {
+void Debugger::whichLine() {
+    dwarf::taddr pc = get_pc();
+
+    for (auto &cu : dw.compilation_units()) {
+        if (die_pc_range(cu.root()).contains(pc)) {
+            auto &lt = cu.get_line_table();
+            auto it = lt.find_address(pc);
+            if (it == lt.end()) std::cerr << "Can't find line number location"
+                                          << std::endl;
+            else                std::cout << it->get_description() << std::endl;
+            break;
+        }
+    }
+}
+
     
 
 //TODO --- write a function setBreakpointOnFunction

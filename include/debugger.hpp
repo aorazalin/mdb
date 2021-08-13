@@ -1,4 +1,5 @@
 #include "breakpoint.hpp"
+#include "helper.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -7,8 +8,7 @@
 
 class Debugger {
 public:
-    Debugger (std::string prog_name, pid_t pid)
-        : m_prog_name_(std::move(prog_name)), m_pid_(pid) {}
+    Debugger (std::string prog_name, pid_t pid);
 
     // Start the debugger
     void run();
@@ -46,8 +46,15 @@ public:
 
     // Which function I am currently at?
     void whichFunction();
+
+    // Which line I am currently at?
+    void whichLine();
 private:
     std::unordered_map<intptr_t, Breakpoint> m_breakpoints_;
     std::string m_prog_name_;
     pid_t m_pid_;
+
+    int fd;
+    elf::elf ef;
+    dwarf::dwarf dw;
 };
