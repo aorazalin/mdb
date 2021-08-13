@@ -92,12 +92,14 @@ uint64_t getRegisterValueFromDwarfRegister (pid_t pid, unsigned regnum) {
 bool find_pc(const dwarf::die &d, dwarf::taddr pc, std::vector<dwarf::die> *stack) {
     using namespace dwarf;
 
-    // postorder <--> more specific DIE at the bottom
+    // postorder <-> more specific DIE at the bottom
     bool found = false;
     for (auto &child : d) 
-        if ((found = find_pc(child, pc, stack))) break;
-
-    if (d.tag == DW_TAG::inlined_subroutine) {
+        if ((found = find_pc(child, pc, stack))) break; // break immediately
+                                                        // because pc can be in only one child
+                                                
+    if (d.tag == DW_TAG::inlined_subroutine
+        || d.tag == DW_TAG::subprogram) {
         try {
             if (found || die_pc_range(d).contains(pc)) {
                 found = true;

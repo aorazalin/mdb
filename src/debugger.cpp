@@ -172,9 +172,9 @@ void Debugger::whichFunction() {
                         // XXX Index/helper/something for looking up PCs
                         // XXX DW_AT_specification and DW_AT_abstract_origin
                         std::vector<dwarf::die> stack;
+                        bool found = false;
                         if (find_pc(cu.root(), pc, &stack)) {
-                                std::cout << "We are currently inside the following functions"
-                                          << " (from more to less specific)" << std::endl;
+                                if (!found) { std::cout << "Inlined (more to less specific) in:\n"; found = true; }
                                 for (auto &d : stack) dump_die(d);
                         }
                         break;
