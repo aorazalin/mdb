@@ -23,27 +23,27 @@ add_executable(${PROJECT_NAME} src/main.cpp
 
 add_executable(hello examples/hello.cpp)
 set_target_properties(hello
-	PROPERTIES COMPILE_OPTIONS "-g")
+	PROPERTIES COMPILE_FLAGS "-g -O0")
 
 add_executable(simpleadd examples/simpleadd.cpp)
 set_target_properties(simpleadd
-	PROPERTIES COMPILE_OPTIONS "-g")
+	PROPERTIES COMPILE_FLAGS "-g -O0")
 
 add_executable(cerrs examples/cerrs.cpp)
 set_target_properties(cerrs
-	PROPERTIES COMPILE_OPTIONS "-g")
+	PROPERTIES COMPILE_FLAGS "-g -O0")
 
 add_executable(couts examples/couts.cpp)
 set_target_properties(couts
-	PROPERTIES COMPILE_OPTIONS "-g")
+	PROPERTIES COMPILE_FLAGS "-g -O0")
 
 add_executable(function examples/function.cpp)
 set_target_properties(function
-	PROPERTIES COMPILE_OPTIONS "-g")
+	PROPERTIES COMPILE_FLAGS  "-g -O0")
 
 add_executable(nested-functions examples/nested-functions.cpp)
 set_target_properties(nested-functions
-	PROPERTIES COMPILE_OPTIONS "-g")
+	PROPERTIES COMPILE_FLAGS "-g -O0")
 
 # run make in libelfin
 add_custom_target(

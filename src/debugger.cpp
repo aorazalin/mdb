@@ -5,6 +5,8 @@
 
 #include <sys/wait.h>
 #include <sys/ptrace.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <iomanip>
 #include <iostream>
 
@@ -66,6 +68,16 @@ void Debugger::handleCommand(const std::string& line) {
             std::cerr << "Invalid address format. Should be 0xADDRESS" << std::endl;
         }
     }
+    else if (isPrefix(command, "which")) {
+        if (isPrefix(args[1], "function")) {
+            whichFunction();
+        } else if (isPrefix(args[1], "line")) {
+            // whichLine();
+            std::cout << "TODO" << std::endl;
+        } else {
+            std::cerr << "Invalid command" << std::endl;
+        }
+    }
     else {
         std::cerr << "Invalid command" << std::endl;
     }
@@ -98,6 +110,7 @@ uint64_t Debugger::readMemory(uint64_t address) {
     return ptrace(PTRACE_PEEKDATA, m_pid_, address, nullptr);
 }
 //TODO try process_vm_readv, process_vm_writev or /proc/<pid>/mem instead --- to look at larger chunks of data
+//because writeMemory writes only a word at a time
 void Debugger::writeMemory(uint64_t address, uint64_t value) {
     ptrace(PTRACE_POKEDATA, m_pid_, address, value);
 }
@@ -125,7 +138,7 @@ void Debugger::stepOverBreakpoint() {
             bp.disable();
             ptrace(PTRACE_SINGLESTEP, m_pid_, nullptr, nullptr);
             waitForSignal();
-            bp.enable(); 
+            bp.enable();
         }
     }
 }
@@ -135,16 +148,42 @@ void Debugger::waitForSignal() {
     waitpid(m_pid_, &wait_status, options);
 }
 
-//TODO --- write function whichFunctionIamAT
-// for each compile unit:
-//  if the pc is b/w DW_AT_low_pic and DW_AT_high_pc:
-//      for each function in the compilation unit:
-//          if the pc is b/w DW_AT_low_pc and DW_AT_high_pc:
-//              return function info
-
 void Debugger::whichFunction() {
-    
+        dwarf::taddr pc = get_pc();
+
+        int fd = open(m_prog_name_.c_str(), O_RDONLY);
+
+        elf::elf ef(elf::create_mmap_loader(fd));
+        dwarf::dwarf dw(dwarf::elf::create_loader(ef));
+
+        // Find the CU containing pc
+        // XXX Use .debug_aranges
+        for (auto &cu : dw.compilation_units()) {
+                if (die_pc_range(cu.root()).contains(pc)) {
+                        // Map PC to a line
+                        auto &lt = cu.get_line_table();
+                        auto it = lt.find_address(pc);
+                        // print info about Compilation Unit
+                        if (it == lt.end())  std::cerr << "Can't find line number location"
+                                                       << std::endl;
+                        else                 std::cout << it->get_description() << std::endl;
+
+                        // Map PC to an object
+                        // XXX Index/helper/something for looking up PCs
+                        // XXX DW_AT_specification and DW_AT_abstract_origin
+                        std::vector<dwarf::die> stack;
+                        if (find_pc(cu.root(), pc, &stack)) {
+                                std::cout << "We are currently inside the following functions"
+                                          << " (from more to less specific)" << std::endl;
+                                for (auto &d : stack) dump_die(d);
+                        }
+                        break;
+                }
+        }
 }
+
+// void Debugger::whichLine() {
+    
 
 //TODO --- write a function setBreakpointOnFunction
 //TODO --- setBreakpointOnLine

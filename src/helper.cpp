@@ -1,7 +1,9 @@
+//RMRK see libelfin/examples/find-pc.cc
 #include <algorithm>
 
 #include <sys/ptrace.h>
 #include <sys/user.h>
+#include <inttypes.h>
 
 #include "helper.hpp"
 
@@ -87,4 +89,35 @@ uint64_t getRegisterValueFromDwarfRegister (pid_t pid, unsigned regnum) {
     return getRegisterValue(pid, it->r);
 }
 
+bool find_pc(const dwarf::die &d, dwarf::taddr pc, std::vector<dwarf::die> *stack) {
+    using namespace dwarf;
+
+    // postorder <--> more specific DIE at the bottom
+    bool found = false;
+    for (auto &child : d) 
+        if ((found = find_pc(child, pc, stack))) break;
+
+    if (d.tag == DW_TAG::inlined_subroutine) {
+        try {
+            if (found || die_pc_range(d).contains(pc)) {
+                found = true;
+                stack->push_back(d);
+            }
+        } catch (std::out_of_range &e) {}
+          catch (value_type_mismatch &e) {}
+    }
+
+    return found;
+}
+
+void dump_die(const dwarf::die &node) {
+    //TODO change to cout
+    printf("<%" PRIx64 "> %s\n",
+            node.get_section_offset(),
+            to_string(node.tag).c_str());
+    for (auto &attr : node.attributes())
+        printf("     %s %s\n",
+               to_string(attr.first).c_str(),
+               to_string(attr.second).c_str());
+}
 

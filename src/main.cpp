@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
         std::cerr << "Program name not specified\n";
         return -1;
     }
-
+    //TODO handle program errors, if it doesn't exist
     auto prog = argv[1];
 
     auto pid = fork();

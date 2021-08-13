@@ -83,3 +83,5 @@ bool isHexNum(const std::string &);
 // which function contain PC
 bool find_pc(const dwarf::die &d, dwarf::taddr pc, std::vector<dwarf::die> *stack);
 
+// Dump contents of that DIE node
+void dump_die(const dwarf::die &node);
