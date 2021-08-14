@@ -1,5 +1,7 @@
+#include "dwarf++.hh"
+#include "elf++.hh"
+
 #include "breakpoint.hpp"
-#include "helper.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -9,7 +11,7 @@
 class Debugger {
 public:
     Debugger (std::string prog_name, pid_t pid);
-// adding some shit
+
     // Start the debugger
     void run();
 
@@ -58,3 +60,4 @@ private:
     elf::elf ef;
     dwarf::dwarf dw;
 };
+
