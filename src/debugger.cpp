@@ -39,13 +39,25 @@ void Debugger::handleCommand(const std::string& line) {
         continueExecution();
     } 
     else if (isPrefix(command, "break")) {
-        if (isHexNum(args[1])) {
-            std::string addr {args[1], 2}; // 0xNUMSEQ->NUMSEQ
-            setBreakpoint(std::stol(addr, 0, 16));
-        } else {
-            std::cerr << "Invalid address format. Should be 0xADDRESS" << std::endl;
+        // break pc <memorylocation>
+        // break line <linenumber>
+        if (isPrefix(args[1], "pc")) {
+            if (isHexNum(args[2])) {
+                std::string addr {args[2], 2}; // 0xNUMSEQ->NUMSEQ
+                setBreakpoint(std::stol(addr, 0, 16));
+            } else {
+                std::cerr << "Invalid address format. Should be 0xADDRESS" << std::endl;
+            }
         }
-    }
+        else if (isPrefix(args[1], "line")) {
+            //TODO handling if args[1] is a number
+            //TODO redo format to break line <#> <file>
+            long line = std::stol(args[2]);
+            auto pc = lineToPC(line);
+            setBreakpoint(pc);
+            std::cout << "Setting break at line " << line << std::endl;
+        }
+   }
     else if (isPrefix(command, "register")) {
         if (isPrefix(args[1], "dump")) {
             dumpRegisters();
@@ -58,8 +70,8 @@ void Debugger::handleCommand(const std::string& line) {
         else if (isPrefix(args[1], "write")) {
             if (isHexNum(args[3])) {
                 std::string val {args[3], 2};
-
-                setRegisterValue(m_pid_, getRegisterFromName(args[2]), std::stol(val, 0, 16)); //TODO CHECKIF args[2] is a valid name for a register?
+                //TODO CHECKIF args[2] is a valid name for a register?
+                setRegisterValue(m_pid_, getRegisterFromName(args[2]), std::stol(val, 0, 16)); 
             } else {
                 std::cerr << "Invalid number format. Should be 0xNUMSEQ" << std::endl;
             }
@@ -80,8 +92,7 @@ void Debugger::handleCommand(const std::string& line) {
         if (isPrefix(args[1], "function")) {
             whichFunction();
         } else if (isPrefix(args[1], "line")) {
-            // whichLine();
-            std::cout << "TODO" << std::endl;
+            whichLine();
         } else {
             std::cerr << "Invalid command" << std::endl;
         }
@@ -214,3 +225,12 @@ void Debugger::whichLine() {
 //TODO --- setBreakpointOnLine
 //TODO --- readVariableAtMemory
 
+uint64_t Debugger::lineToPC(long line_number) {
+    for (auto &cu : dw.compilation_units()) {
+        auto &lt = cu.get_line_table();
+        for (auto &line : lt) 
+            if (static_cast<long>(line.line) == line_number) return line.address;
+        
+    } 
+    throw "Something going wrong in lineToPC";
+}

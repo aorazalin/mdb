@@ -51,6 +51,9 @@ public:
 
     // Which line I am currently at?
     void whichLine();
+
+    // get #line number
+    uint64_t lineToPC(long line_number);
 private:
     std::unordered_map<intptr_t, Breakpoint> m_breakpoints_;
     std::string m_prog_name_;
