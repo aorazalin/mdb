@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <iomanip>
 #include <iostream>
+#include <functional>
 
 Debugger::Debugger (std::string prog_name, pid_t pid)
     : m_prog_name_(std::move(prog_name)), m_pid_(pid) {
@@ -63,7 +64,7 @@ void Debugger::handleCommand(const std::string& line) {
             setBreakAtFunction(f_name);
         } else 
             std::cerr << "Format: break {pc|line|function} [args]";
-   }
+    }
     else if (isPrefix(command, "register")) {
         if (isPrefix(args[1], "dump")) {
             dumpRegisters();
@@ -102,6 +103,13 @@ void Debugger::handleCommand(const std::string& line) {
         } else {
             std::cerr << "Invalid command" << std::endl;
         }
+    } 
+    else if (isPrefix(command, "read")) {
+        if (isPrefix(args[1], "variable")) {
+            std::string v_name {args[2]}; 
+            readVariable(v_name);
+        } else 
+            std::cerr << "Invalid command" << std::endl;
     }
     else {
         std::cerr << "Invalid command" << std::endl;
@@ -173,35 +181,37 @@ void Debugger::waitForSignal() {
 }
 
 void Debugger::whichFunction() {
-        dwarf::taddr pc = get_pc();
+    dwarf::taddr pc = get_pc();
 
-        // Find the CU containing pc
-        // XXX Use .debug_aranges
-        for (auto &cu : m_dwarf_.compilation_units()) {
-                if (die_pc_range(cu.root()).contains(pc)) {
-                        // Map PC to a line
-                        auto &lt = cu.get_line_table();
-                        auto it = lt.find_address(pc);
-                        // print info about Compilation Unit
-                        if (it == lt.end())  std::cerr << "Can't find line number location"
-                                                       << std::endl;
-                        else                 std::cout << it->get_description() << std::endl;
+    // Find the CU containing pc
+    // XXX Use .debug_aranges
+    for (auto &cu : m_dwarf_.compilation_units()) {
+        if (!die_pc_range(cu.root()).contains(pc)) continue;
+        // Map PC to a line
+        auto &lt = cu.get_line_table();
+        auto it = lt.find_address(pc);
+        // print info about Compilation Unit
+        if (it == lt.end())  std::cerr << "Can't find line number location"
+                                       << std::endl;
+        else                 std::cout << it->get_description() << std::endl;
 
-                        // Map PC to an object
-                        // XXX Index/helper/something for looking up PCs
-                        // XXX DW_AT_specification and DW_AT_abstract_origin
-                        std::vector<dwarf::die> stack;
-                        bool found = false;
-                        if (find_pc(cu.root(), pc, &stack)) {
-                            for (auto &d : stack) {
-                                 if (!found)
-                                    { std::cout << "Inlined (more to less specific) in:\n"; found = true; }
-                                 dump_die(d);
-                            }
-                        }
-                        break;
-                }
+        // Map PC to an object
+        // XXX Index/helper/something for looking up PCs
+        // XXX DW_AT_specification and DW_AT_abstract_origin
+        std::vector<dwarf::die> stack;
+        bool found = false;
+        if (find_pc(cu.root(), pc, &stack)) {
+            for (auto &d : stack) {
+                 if (!found) { 
+                        std::cout << "Inlined (more to less specific) in:\n"; 
+                        found = true;
+                 }
+                 dump_die(d);
+            }
         }
+
+        break;
+    }
 }
 
 void Debugger::whichLine() {
@@ -225,8 +235,6 @@ void Debugger::whichLine() {
 }
 
     
-
-//TODO --- readVariableAtMemory
 
 dwarf::line_table::iterator Debugger::getEntryFromPC(uint64_t pc) {
     for (auto &cu : m_dwarf_.compilation_units()) {
@@ -253,7 +261,29 @@ void Debugger::setBreakAtFunction(std::string f_name) {
             return;
         }
     }
-    std::cout << "Couldn't find function with name " 
+    std::cerr << "Couldn't find function with name " 
               << f_name << std::endl;
 }
 
+void Debugger::readVariable(std::string v_name) {
+
+    std::function<bool(const dwarf::die &)> depthSearch;
+    depthSearch = [&depthSearch,v_name](const dwarf::die &die) {
+        if (die.tag == dwarf::DW_TAG::variable
+                && at_name(die) == v_name) {
+            //TODO process DIE
+            dump_die(die);
+            return true;
+        }
+        
+        for (auto &child : die)
+            if (depthSearch(child)) return true;
+        return false;
+    };
+
+    for (auto &cu : m_dwarf_.compilation_units()) {
+        if (depthSearch(cu.root())) return;
+    }
+    std::cerr << "Couldn't find variable with name "
+              << v_name << std::endl;
+}
