@@ -56,9 +56,11 @@ public:
     // get #line number
     dwarf::line_table::iterator getEntryFromPC(uint64_t pc);
 
-    void setBreakAtFunction(std::string f_name);
+    void setBreakpointAtFunction(std::string f_name);
 
     void readVariable(std::string v_name);
+
+    void setBreakpointAtLine(unsigned line_number, const std::string &filename);
 private:
     std::unordered_map<intptr_t, Breakpoint> m_breakpoints_;
     std::string m_prog_name_;

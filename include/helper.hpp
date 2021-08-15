@@ -87,3 +87,8 @@ bool find_pc(const dwarf::die &d, dwarf::taddr pc, std::vector<dwarf::die> *stac
 
 // Dump contents of that DIE node
 void dump_die(const dwarf::die &node);
+
+bool isSuffix(const std::string &, const std::string &);
+
+
+

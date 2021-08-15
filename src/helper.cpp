@@ -1,4 +1,3 @@
-//RMRK see libelfin/examples/find-pc.cc
 #include <algorithm>
 
 #include <sys/ptrace.h>
@@ -19,9 +18,15 @@ std::vector<std::string> split(const std::string &s, char delimiter) {
     return out;
 }
 
-bool isPrefix(const std::string &s, const std::string& of) {
+bool isPrefix(const std::string &s, const std::string &of) {
     if (s.size() > of.size()) return false;
     return std::equal(s.begin(), s.end(), of.begin());
+}
+
+bool isSuffix(const std::string &s, const std::string &of) {
+    if (s.size() > of.size()) return false;
+    auto offset = of.end() - (of.begin() + s.size());
+    return std::equal(s.begin(), s.end(), of.begin() + offset);
 }
 
 bool isHexNum(const std::string &s) {
