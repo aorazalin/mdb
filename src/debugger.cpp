@@ -12,16 +12,17 @@
 
 Debugger::Debugger (std::string prog_name, pid_t pid)
     : m_prog_name_(std::move(prog_name)), m_pid_(pid) {
-    fd = open(m_prog_name_.c_str(), O_RDONLY);
-    this->ef = elf::elf(elf::create_mmap_loader(fd));
-    this->dw = dwarf::dwarf(dwarf::elf::create_loader(ef));
+    m_fd_ = open(m_prog_name_.c_str(), O_RDONLY);
+    this->m_elf_ = elf::elf(elf::create_mmap_loader(m_fd_));
+    this->m_dwarf_ = dwarf::dwarf(dwarf::elf::create_loader(m_elf_));
 }
 
 
 void Debugger::run() {
     int wait_status;
     auto options = 0;
-    waitpid(m_pid_, &wait_status, options); // wait for child process to finish
+    waitpid(m_pid_, &wait_status, options); // wait for 
+                                            // child process to finish
 
     char *line = nullptr;
     while ((line = linenoise("minidbg> ")) != nullptr) {
@@ -45,18 +46,23 @@ void Debugger::handleCommand(const std::string& line) {
             if (isHexNum(args[2])) {
                 std::string addr {args[2], 2}; // 0xNUMSEQ->NUMSEQ
                 setBreakpoint(std::stol(addr, 0, 16));
-            } else {
+                std::cout << "Set breakpoint at address 0x" << std::hex << addr << std::endl;
+            } else 
                 std::cerr << "Invalid address format. Should be 0xADDRESS" << std::endl;
-            }
+            
         }
         else if (isPrefix(args[1], "line")) {
             //TODO handling if args[1] is a number
             //TODO redo format to break line <#> <file>
             long line = std::stol(args[2]);
-            auto pc = lineToPC(line);
-            setBreakpoint(pc);
+            auto entry = getEntryFromPC(line);
+            setBreakpoint(entry->address);
             std::cout << "Setting break at line " << line << std::endl;
-        }
+        } else if (isPrefix(args[1], "function")) {
+            std::string f_name = args[2];
+            setBreakAtFunction(f_name);
+        } else 
+            std::cerr << "Format: break {pc|line|function} [args]";
    }
     else if (isPrefix(command, "register")) {
         if (isPrefix(args[1], "dump")) {
@@ -118,7 +124,6 @@ void Debugger::continueExecution() {
 
 
 void Debugger::setBreakpoint(intptr_t at_addr) {
-    std::cout << "Set breakpoint at address 0x" << std::hex << at_addr << std::endl;
     Breakpoint bp {m_pid_, at_addr};
     bp.enable();
     m_breakpoints_[at_addr] = bp;
@@ -172,7 +177,7 @@ void Debugger::whichFunction() {
 
         // Find the CU containing pc
         // XXX Use .debug_aranges
-        for (auto &cu : dw.compilation_units()) {
+        for (auto &cu : m_dwarf_.compilation_units()) {
                 if (die_pc_range(cu.root()).contains(pc)) {
                         // Map PC to a line
                         auto &lt = cu.get_line_table();
@@ -203,7 +208,7 @@ void Debugger::whichLine() {
         dwarf::taddr pc = get_pc();
         // Find the CU containing pc
         // XXX Use .debug_aranges
-        for (auto &cu : dw.compilation_units()) {
+        for (auto &cu : m_dwarf_.compilation_units()) {
             if (die_pc_range(cu.root()).contains(pc)) {
                     // Map PC to a line
                     auto &lt = cu.get_line_table();
@@ -221,16 +226,34 @@ void Debugger::whichLine() {
 
     
 
-//TODO --- write a function setBreakpointOnFunction
-//TODO --- setBreakpointOnLine
 //TODO --- readVariableAtMemory
 
-uint64_t Debugger::lineToPC(long line_number) {
-    for (auto &cu : dw.compilation_units()) {
+dwarf::line_table::iterator Debugger::getEntryFromPC(uint64_t pc) {
+    for (auto &cu : m_dwarf_.compilation_units()) {
+        if (!die_pc_range(cu.root()).contains(pc)) continue;
+
         auto &lt = cu.get_line_table();
-        for (auto &line : lt) 
-            if (static_cast<long>(line.line) == line_number) return line.address;
-        
-    } 
-    throw "Something going wrong in lineToPC";
+        auto it = lt.find_address(pc);
+        if (it == lt.end()) throw std::out_of_range("Cannot find line entry");
+        return it;
+    }
+    throw std::out_of_range("Cannot find line entry");
 }
+
+void Debugger::setBreakAtFunction(std::string f_name) {
+    for (auto &cu : m_dwarf_.compilation_units()) {
+        for (auto &die : cu.root()) {
+            if (!die.has(dwarf::DW_AT::name) || at_name(die) != f_name) continue;
+            auto low_pc = at_low_pc(die);
+            auto entry = getEntryFromPC(low_pc);
+            ++entry; 
+            setBreakpoint(entry->address);
+            std::cout << "Breakpoint set on function " << f_name 
+                      << std::endl;
+            return;
+        }
+    }
+    std::cout << "Couldn't find function with name " 
+              << f_name << std::endl;
+}
+

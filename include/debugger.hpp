@@ -10,6 +10,7 @@
 
 class Debugger {
 public:
+    // Constructor that takes program name & process ID
     Debugger (std::string prog_name, pid_t pid);
 
     // Start the debugger
@@ -53,14 +54,16 @@ public:
     void whichLine();
 
     // get #line number
-    uint64_t lineToPC(long line_number);
+    dwarf::line_table::iterator getEntryFromPC(uint64_t pc);
+
+    void setBreakAtFunction(std::string f_name);
 private:
     std::unordered_map<intptr_t, Breakpoint> m_breakpoints_;
     std::string m_prog_name_;
     pid_t m_pid_;
-
-    int fd;
-    elf::elf ef;
-    dwarf::dwarf dw;
+    //possibly add offset
+    int m_fd_;
+    elf::elf m_elf_;
+    dwarf::dwarf m_dwarf_;
 };
 
