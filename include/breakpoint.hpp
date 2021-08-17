@@ -1,3 +1,6 @@
+#ifndef BREAKPOINT_HPP
+#define BREAKPOINT_HPP
+
 #include <sys/types.h>
 #include <stdint.h>
 
@@ -24,3 +27,5 @@ private:
     bool m_enabled_; // is breakpoint "on"
     uint8_t m_saved_data_; // saved data byte
 };
+
+#endif

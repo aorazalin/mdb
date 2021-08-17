@@ -1,3 +1,6 @@
+#ifndef DEBUGGER_HPP
+#define DEBUGGER_HPP
+
 #include "dwarf++.hh"
 #include "elf++.hh"
 
@@ -71,3 +74,4 @@ private:
     dwarf::dwarf m_dwarf_;
 };
 
+#endif
