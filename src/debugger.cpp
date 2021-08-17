@@ -9,28 +9,43 @@
 #include <fcntl.h>
 #include <iomanip>
 #include <iostream>
+#include <fstream>
 #include <functional>
 
 Debugger::Debugger (std::string prog_name, pid_t pid)
-    : m_prog_name_(std::move(prog_name)), m_pid_(pid) {
-    m_fd_ = open(m_prog_name_.c_str(), O_RDONLY);
-    this->m_elf_ = elf::elf(elf::create_mmap_loader(m_fd_));
-    this->m_dwarf_ = dwarf::dwarf(dwarf::elf::create_loader(m_elf_));
+    : prog_name_(std::move(prog_name)), pid_(pid) {
+    auto fd = open(prog_name_.c_str(), O_RDONLY);
+    this->elf_ = elf::elf(elf::create_mmap_loader(fd));
+    this->dwarf_  = dwarf::dwarf(dwarf::elf::create_loader(elf_));
 }
 
 
 void Debugger::run() {
-    int wait_status;
-    auto options = 0;
-    waitpid(m_pid_, &wait_status, options); // wait for 
-                                            // child process to finish
-
+    waitForSignal();
+    initLoadAddress();
+    
     char *line = nullptr;
     while ((line = linenoise("minidbg> ")) != nullptr) {
         handleCommand(line);
         linenoiseHistoryAdd(line);
         linenoiseFree(line);
     }
+}
+
+void Debugger::initLoadAddress() {
+    // if it's dynamic library
+    if (elf_.get_hdr().type == elf::et::dyn) {
+        std::ifstream map_info("/proc/" + std::to_string(pid_) + "/maps");
+
+        std::string addr;
+        std::getline(map_info, addr, '-'); // read first line
+        // <8bit> - <8bit>
+        load_addr_ = std::stoi(addr, 0, 16);
+    }
+}
+
+uint64_t Debugger::offsetLoadAddress(uint64_t addr) {
+    return addr - load_addr_;
 }
 
 void Debugger::handleCommand(const std::string& line) {
@@ -72,14 +87,14 @@ void Debugger::handleCommand(const std::string& line) {
         else if (isPrefix(args[1], "read")) {
             std::cout << args[1] << " 0x"
                       << std::setfill('0') << std::setw(16) << std::hex
-                      << getRegisterValue(m_pid_, getRegisterFromName(args[2])) 
+                      << getRegisterValue(pid_, getRegisterFromName(args[2])) 
                       << std::endl;
         }
         else if (isPrefix(args[1], "write")) {
             if (isHexNum(args[3])) {
                 std::string val {args[3], 2};
                 //TODO CHECKIF args[2] is a valid name for a register?
-                setRegisterValue(m_pid_, 
+                setRegisterValue(pid_, 
                                  getRegisterFromName(args[2]),
                                  std::stol(val, 0, 16)); 
             } else {
@@ -126,42 +141,42 @@ void Debugger::dumpRegisters() {
     for (const auto &rd : g_register_descriptors) {
         std::cout << rd.name << " 0x"
                   << std::setfill('0') << std::setw(16) << std::hex
-                  << getRegisterValue(m_pid_, rd.r) 
+                  << getRegisterValue(pid_, rd.r) 
                   << std::endl;
     }
 }
 
 void Debugger::continueExecution() {
     stepOverBreakpoint();
-    ptrace(PTRACE_CONT, m_pid_, nullptr, nullptr);
+    ptrace(PTRACE_CONT, pid_, nullptr, nullptr);
     waitForSignal();
 }
 
 
 void Debugger::setBreakpoint(intptr_t at_addr) {
-    Breakpoint bp {m_pid_, at_addr};
+    Breakpoint bp {pid_, at_addr};
     bp.enable();
-    m_breakpoints_[at_addr] = bp;
+    breakpoints_[at_addr] = bp;
 }
 
 //TODO try process_vm_readv, process_vm_writev or /proc/<pid>/mem instead
 // --- to look at larger chunks of data
 uint64_t Debugger::readMemory(uint64_t address) {
-    return ptrace(PTRACE_PEEKDATA, m_pid_, address, nullptr);
+    return ptrace(PTRACE_PEEKDATA, pid_, address, nullptr);
 }
 //TODO try process_vm_readv, process_vm_writev or /proc/<pid>/mem instead 
 // --- to look at larger chunks of data
 //because writeMemory writes only a word at a time
 void Debugger::writeMemory(uint64_t address, uint64_t value) {
-    ptrace(PTRACE_POKEDATA, m_pid_, address, value);
+    ptrace(PTRACE_POKEDATA, pid_, address, value);
 }
 
 uint64_t Debugger::get_pc() {
-    return getRegisterValue(m_pid_, Reg::rip);
+    return getRegisterValue(pid_, Reg::rip);
 }
 
 void Debugger::set_pc(uint64_t pc) {
-    setRegisterValue(m_pid_, Reg::rip, pc);
+    setRegisterValue(pid_, Reg::rip, pc);
 }
 
 void Debugger::stepOverBreakpoint() {
@@ -169,15 +184,15 @@ void Debugger::stepOverBreakpoint() {
                                                       // before execution
 
     // if on a breakpoint
-    if (m_breakpoints_.count(possible_breakpoint_location)) {
-        auto& bp = m_breakpoints_[possible_breakpoint_location];
+    if (breakpoints_.count(possible_breakpoint_location)) {
+        auto& bp = breakpoints_[possible_breakpoint_location];
         
         if (bp.isEnabled()) {
             auto previous_instruction_address = possible_breakpoint_location;
             set_pc(previous_instruction_address);
 
             bp.disable();
-            ptrace(PTRACE_SINGLESTEP, m_pid_, nullptr, nullptr);
+            ptrace(PTRACE_SINGLESTEP, pid_, nullptr, nullptr);
             waitForSignal();
             bp.enable();
         }
@@ -186,7 +201,7 @@ void Debugger::stepOverBreakpoint() {
 
 void Debugger::waitForSignal() {
     int wait_status, options = 0;
-    waitpid(m_pid_, &wait_status, options);
+    waitpid(pid_, &wait_status, options);
 }
 
 void Debugger::whichFunction() {
@@ -194,7 +209,7 @@ void Debugger::whichFunction() {
 
     // Find the CU containing pc
     // XXX Use .debug_aranges
-    for (auto &cu : m_dwarf_.compilation_units()) {
+    for (auto &cu : dwarf_.compilation_units()) {
         if (!die_pc_range(cu.root()).contains(pc)) continue;
         // Map PC to a line
         auto &lt = cu.get_line_table();
@@ -227,7 +242,7 @@ void Debugger::whichLine() {
     dwarf::taddr pc = get_pc();
     // Find the CU containing pc
     // XXX Use .debug_aranges
-    for (auto &cu : m_dwarf_.compilation_units()) {
+    for (auto &cu : dwarf_.compilation_units()) {
         if (!die_pc_range(cu.root()).contains(pc)) continue;
         // Map PC to a line
         auto &lt = cu.get_line_table();
@@ -247,7 +262,7 @@ void Debugger::whichLine() {
     
 
 dwarf::line_table::iterator Debugger::getEntryFromPC(uint64_t pc) {
-    for (auto &cu : m_dwarf_.compilation_units()) {
+    for (auto &cu : dwarf_.compilation_units()) {
         if (!die_pc_range(cu.root()).contains(pc)) continue;
 
         auto &lt = cu.get_line_table();
@@ -259,7 +274,7 @@ dwarf::line_table::iterator Debugger::getEntryFromPC(uint64_t pc) {
 }
 
 void Debugger::setBreakpointAtFunction(std::string f_name) {
-    for (auto &cu : m_dwarf_.compilation_units()) {
+    for (auto &cu : dwarf_.compilation_units()) {
         for (auto &die : cu.root()) {
             if (!die.has(dwarf::DW_AT::name) || at_name(die) != f_name) continue;
             auto low_pc = at_low_pc(die);
@@ -291,7 +306,7 @@ void Debugger::readVariable(std::string v_name) {
         return false;
     };
 
-    for (auto &cu : m_dwarf_.compilation_units()) {
+    for (auto &cu : dwarf_.compilation_units()) {
         if (depthSearch(cu.root())) return;
     }
     std::cerr << "Couldn't find variable with name "
@@ -300,7 +315,7 @@ void Debugger::readVariable(std::string v_name) {
 
 void Debugger::setBreakpointAtLine(unsigned b_line,
         const std::string &filename) {
-    for (const auto &cu : m_dwarf_.compilation_units()) {
+    for (const auto &cu : dwarf_.compilation_units()) {
        if (!isSuffix(filename, at_name(cu.root()))) continue; 
 
        const auto& lt = cu.get_line_table();

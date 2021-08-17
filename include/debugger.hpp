@@ -64,14 +64,17 @@ public:
     void readVariable(std::string v_name);
 
     void setBreakpointAtLine(unsigned line_number, const std::string &filename);
+
+    void initLoadAddress();
+
+    uint64_t offsetLoadAddress(uint64_t addr);
 private:
-    std::unordered_map<intptr_t, Breakpoint> m_breakpoints_;
-    std::string m_prog_name_;
-    pid_t m_pid_;
-    //possibly add offset
-    int m_fd_;
-    elf::elf m_elf_;
-    dwarf::dwarf m_dwarf_;
+    std::unordered_map<intptr_t, Breakpoint> breakpoints_;
+    std::string prog_name_;
+    pid_t pid_;
+    uint64_t load_addr_;
+    elf::elf elf_;
+    dwarf::dwarf dwarf_;
 };
 
 #endif
