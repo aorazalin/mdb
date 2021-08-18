@@ -8,7 +8,7 @@ class Breakpoint {
 public:
     Breakpoint() = default;
     Breakpoint(pid_t pid, intptr_t addr)
-        : m_pid_{pid}, m_addr_{addr}, m_enabled_{false}, m_saved_data_{} {}
+        : pid_{pid}, addr_{addr}, enabled_{false}, saved_data_{} {}
     
     // Enable breakpoint
     void enable();
@@ -17,15 +17,15 @@ public:
     void disable();
 
     // Is breakpoint on
-    bool isEnabled() const { return m_enabled_; }
+    bool isEnabled() const { return enabled_; }
 
     // Get address
-    intptr_t getAddress() const { return m_addr_; }
+    intptr_t getAddress() const { return addr_; }
 private:
-    pid_t m_pid_; // process id
-    intptr_t m_addr_; // id of the breakpoint
-    bool m_enabled_; // is breakpoint "on"
-    uint8_t m_saved_data_; // saved data byte
+    pid_t pid_; // process id
+    intptr_t addr_; // id of the breakpoint
+    bool enabled_; // is breakpoint "on"
+    uint8_t saved_data_; // saved data byte
 };
 
 #endif

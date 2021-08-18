@@ -91,5 +91,6 @@ void dump_die(const dwarf::die &node);
 
 bool isSuffix(const std::string &, const std::string &);
 
+uint64_t numLines(std::ifstream &file);
 
 #endif

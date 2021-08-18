@@ -8,6 +8,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <signal.h>
 
 
 
@@ -68,11 +69,19 @@ public:
     void initLoadAddress();
 
     uint64_t offsetLoadAddress(uint64_t addr);
+
+    void printSource(const std::string &file_name,
+                               unsigned line,
+                               unsigned n_lines_context = 2);
+
+    siginfo_t getSignalInfo(); 
+
+    void handleSigtrap(siginfo_t info); 
 private:
     std::unordered_map<intptr_t, Breakpoint> breakpoints_;
     std::string prog_name_;
     pid_t pid_;
-    uint64_t load_addr_;
+    uint64_t load_addr_{0};
     elf::elf elf_;
     dwarf::dwarf dwarf_;
 };

@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <iomanip>
 #include <iostream>
+#include <algorithm>
 #include <fstream>
 #include <functional>
 
@@ -33,6 +34,7 @@ void Debugger::run() {
 }
 
 void Debugger::initLoadAddress() {
+    //TODO look into it in the future
     // if it's dynamic library
     if (elf_.get_hdr().type == elf::et::dyn) {
         std::ifstream map_info("/proc/" + std::to_string(pid_) + "/maps");
@@ -58,27 +60,13 @@ void Debugger::handleCommand(const std::string& line) {
     else if (isPrefix(command, "break")) {
         // break pc <memorylocation>
         // break line <linenumber>
-        if (isPrefix(args[1], "pc")) {
-            if (isHexNum(args[2])) {
-                std::string addr {args[2], 2}; // 0xNUMSEQ->NUMSEQ
-                setBreakpoint(std::stol(addr, 0, 16));
-                std::cout << "Set breakpoint at address 0x" 
-                          << std::hex << addr << std::endl;
-            } else 
-                std::cerr << "Invalid address format. Should be 0xADDRESS" 
-                          << std::endl;
-            
+        if (isHexNum(args[1])) {
+            std::string addr {args[1], 2}; // 0xNUMSEQ->NUMSEQ
+            setBreakpoint(std::stol(addr, 0, 16));
+            std::cout << "Set breakpoint at address 0x" 
+                      << std::hex << addr << std::endl;
+       
         }
-        else if (isPrefix(args[1], "line")) {
-            //TODO handling if args[2] is a number
-            //TODO redo format to break line <#> <file>
-            long line = stol(args[2]);
-            setBreakpointAtLine(line, args[3]);
-        } else if (isPrefix(args[1], "function")) {
-            std::string f_name = args[2];
-            setBreakpointAtFunction(f_name);
-        } else 
-            std::cerr << "Format: break {pc|line|function} [args]";
     }
     else if (isPrefix(command, "register")) {
         if (isPrefix(args[1], "dump")) {
@@ -125,17 +113,46 @@ void Debugger::handleCommand(const std::string& line) {
             std::cerr << "Invalid command" << std::endl;
         }
     } 
-    else if (isPrefix(command, "read")) {
-        if (isPrefix(args[1], "variable")) {
-            std::string v_name {args[2]}; 
-            readVariable(v_name);
-        } else 
-            std::cerr << "Invalid command" << std::endl;
-    }
     else {
         std::cerr << "Invalid command" << std::endl;
     }
 }
+
+void Debugger::printSource(const std::string &file_name,
+                          unsigned line,
+                          unsigned n_lines_context) {
+
+    std::ifstream file {file_name};
+
+    auto start_line = line <= n_lines_context ? 1 : line - n_lines_context;
+    auto end_line = line + n_lines_context + (line < n_lines_context ? n_lines_context - line : 0) + 1;
+
+    char c{};
+    auto current_line = 1u;
+    //Skip lines up until start_line
+    while (current_line != start_line && file.get(c)) {
+        if (c == '\n') {
+            ++current_line;
+        }
+    }
+
+    //output cursor if we're at the current line
+    std::cout << (current_line==line ? "> " : "  ");
+
+    //write lines up until end_line
+    while (current_line <= end_line && file.get(c)) {
+        std::cout << c;
+        if (c == '\n') {
+            ++current_line;
+            //output cursor if we're at the current line
+            std::cout << (current_line==line ? "> " : "  ");
+        }
+    }
+
+    //Write newline and make sure that the stream is flushed properly
+    std::cout << std::endl;
+
+} // IFSTREAM will close by itself <-> RAII
 
 void Debugger::dumpRegisters() {
     for (const auto &rd : g_register_descriptors) {
@@ -180,28 +197,64 @@ void Debugger::set_pc(uint64_t pc) {
 }
 
 void Debugger::stepOverBreakpoint() {
-    auto possible_breakpoint_location = get_pc() - 1; // -1 because PC increments
-                                                      // before execution
+    if (!breakpoints_.count(get_pc())) return;
 
     // if on a breakpoint
-    if (breakpoints_.count(possible_breakpoint_location)) {
-        auto& bp = breakpoints_[possible_breakpoint_location];
-        
-        if (bp.isEnabled()) {
-            auto previous_instruction_address = possible_breakpoint_location;
-            set_pc(previous_instruction_address);
-
-            bp.disable();
-            ptrace(PTRACE_SINGLESTEP, pid_, nullptr, nullptr);
-            waitForSignal();
-            bp.enable();
-        }
+    auto& bp = breakpoints_[get_pc()];
+    if (bp.isEnabled()) {
+        bp.disable();
+        ptrace(PTRACE_SINGLESTEP, pid_, nullptr, nullptr);
+        waitForSignal();
+        bp.enable();
     }
 }
 
 void Debugger::waitForSignal() {
+    // waiting for signal
     int wait_status, options = 0;
     waitpid(pid_, &wait_status, options);
+
+    // handling signal
+    auto siginfo = getSignalInfo();
+
+    switch (siginfo.si_signo) {
+        case SIGTRAP:
+            handleSigtrap(siginfo);
+            break;
+        case SIGSEGV:
+            std::cout << "Good old segfault. Why: " << siginfo.si_code
+                      << std::endl;
+            break;
+        default:
+            std::cout << "Good signal " << strsignal(siginfo.si_code)
+                      << std::endl;
+    }
+}
+
+void Debugger::handleSigtrap(siginfo_t info) {
+    switch (info.si_code) {
+        // either of these signals will be sent when hitting breakpoint
+        case SI_KERNEL:
+        case TRAP_BRKPT: {
+            set_pc(get_pc() - 1); // Since assynchronous auto increment
+                                  // of PC
+            std::cout << "Hit breakpoint at address 0x"
+                      << std::hex << get_pc() << std::endl;
+            // offset pc for querying DWARF
+            auto offset_pc = offsetLoadAddress(get_pc());
+            auto line_entry = getEntryFromPC(offset_pc);
+            printSource(line_entry->file->path, line_entry->line);
+            return;
+        }
+        case TRAP_TRACE: {
+            return;
+        }
+        default: {
+            std::cout << "Unknown signal with code " << info.si_code
+                      << std::endl;
+            return;
+        }
+    }
 }
 
 void Debugger::whichFunction() {
@@ -327,4 +380,10 @@ void Debugger::setBreakpointAtLine(unsigned b_line,
        }
     }
     throw std::out_of_range("setBreakpointAtLine");
+}
+
+siginfo_t Debugger::getSignalInfo() {
+    siginfo_t info;
+    ptrace(PTRACE_GETSIGINFO, pid_, nullptr, &info);
+    return info;
 }
