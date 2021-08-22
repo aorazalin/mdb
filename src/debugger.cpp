@@ -44,10 +44,29 @@ void Debugger::initLoadAddress() {
         // <8bit> - <8bit>
         load_addr_ = std::stoi(addr, 0, 16);
     }
+    std::cout << "Load Address: " << load_addr_ << std::endl;
+}
+
+void Debugger::singleStep() {
+    ptrace(PTRACE_SINGLESTEP, pid_, nullptr, nullptr);
+    waitForSignal();
+}
+
+void Debugger::singleStepWithBreakpointCheck() {
+    if (breakpoints_.count(get_pc())) stepOverBreakpoint();
+    else singleStep();
 }
 
 uint64_t Debugger::offsetLoadAddress(uint64_t addr) {
     return addr - load_addr_;
+}
+
+uint64_t Debugger::offsetDwarfAddress(uint64_t addr) {
+    return addr + load_addr_;
+}
+
+uint64_t Debugger::getOffsetPC() {
+    return offsetLoadAddress(get_pc());
 }
 
 void Debugger::handleCommand(const std::string& line) {
@@ -104,15 +123,15 @@ void Debugger::handleCommand(const std::string& line) {
                       << std::endl;
         }
     }
-    else if (isPrefix(command, "which")) {
-        if (isPrefix(args[1], "function")) {
-            whichFunction();
-        } else if (isPrefix(args[1], "line")) {
-            whichLine();
-        } else {
-            std::cerr << "Invalid command" << std::endl;
-        }
-    } 
+		else if (isPrefix(command, "step")) {
+				stepIn();
+		}
+		else if (isPrefix(command, "next")) {
+				stepOver();
+		}
+		else if (isPrefix(command, "finish")) {
+				stepOut();
+		}
     else {
         std::cerr << "Invalid command" << std::endl;
     }
@@ -226,7 +245,7 @@ void Debugger::waitForSignal() {
                       << std::endl;
             break;
         default:
-            std::cout << "Good signal " << strsignal(siginfo.si_code)
+            std::cout << "Got signal: " << strsignal(siginfo.si_signo)
                       << std::endl;
     }
 }
@@ -242,7 +261,7 @@ void Debugger::handleSigtrap(siginfo_t info) {
                       << std::hex << get_pc() << std::endl;
             // offset pc for querying DWARF
             auto offset_pc = offsetLoadAddress(get_pc());
-            auto line_entry = getEntryFromPC(offset_pc);
+            auto line_entry = getLineEntryFromPC(offset_pc);
             printSource(line_entry->file->path, line_entry->line);
             return;
         }
@@ -291,6 +310,91 @@ void Debugger::whichFunction() {
     }
 }
 
+void Debugger::stepOut() {
+    auto frame_ptr = getRegisterValue(pid_, Reg::rbp);
+    // return address is store 8 bytes after start of stack frame
+    auto return_addr = readMemory(frame_ptr + 8);
+
+    bool shouldRemoveBreakpoint = false;
+    if (!breakpoints_.count(return_addr)) {
+        setBreakpoint(return_addr);
+        shouldRemoveBreakpoint = true;
+    }
+
+    continueExecution();
+
+    if (shouldRemoveBreakpoint) {
+        removeBreakpoint(return_addr);
+    }
+}
+
+void Debugger::removeBreakpoint(std::intptr_t addr) {
+    if (breakpoints_.at(addr).isEnabled()) 
+        breakpoints_.at(addr).disable();
+    breakpoints_.erase(addr); 
+}
+
+void Debugger::stepIn() {
+    auto line = getLineEntryFromPC(getOffsetPC())->line;
+
+    while (getLineEntryFromPC(getOffsetPC())->line == line)
+        singleStepWithBreakpointCheck();
+
+    auto line_entry = getLineEntryFromPC(getOffsetPC());
+    printSource(line_entry->file->path, line_entry->line);
+}
+
+dwarf::die Debugger::getFunctionFromPC(uint64_t pc) {
+		//TODO add recursion for an actual search
+		//
+		for (auto &cu : dwarf_.compilation_units()) {
+				if (die_pc_range(cu.root()).contains(pc)) {
+						for (auto &d : cu.root()) 
+								if (die_pc_range(d).contains(pc))
+										return d;
+				}
+		}
+   throw std::out_of_range("Cannot find function in getFunctionFromPC");
+}
+
+// simple solution to step over --- put breakpoint
+// at every line inside that function + return address
+void Debugger::stepOver() {
+    auto func = getFunctionFromPC(getOffsetPC());
+    auto funcStart = at_low_pc(func);
+    auto funcEnd = at_high_pc(func);
+
+    auto line = getLineEntryFromPC(funcStart);
+    auto start_line = getLineEntryFromPC(getOffsetPC());
+    
+    // function to save up places to restore from
+    // "polluted" breakpoints
+    std::vector<std::intptr_t> to_delete;
+
+    while (line->address < funcEnd) {
+        auto load_address = offsetDwarfAddress(line->address);
+        if (line->address != start_line->address 
+                && !breakpoints_.count(load_address)) {
+            setBreakpoint(load_address);
+            to_delete.push_back(load_address);
+        }
+       ++line;
+    }
+
+    auto frame_ptr = getRegisterValue(pid_, Reg::rbp);
+    auto return_addr = readMemory(frame_ptr + 8);
+    if (!breakpoints_.count(return_addr)) {
+				setBreakpoint(return_addr);
+				to_delete.push_back(return_addr);
+    }
+
+		continueExecution();
+
+		for (auto addr : to_delete) {
+				removeBreakpoint(addr);
+		}
+}
+
 void Debugger::whichLine() {
     dwarf::taddr pc = get_pc();
     // Find the CU containing pc
@@ -314,7 +418,7 @@ void Debugger::whichLine() {
 
     
 
-dwarf::line_table::iterator Debugger::getEntryFromPC(uint64_t pc) {
+dwarf::line_table::iterator Debugger::getLineEntryFromPC(uint64_t pc) {
     for (auto &cu : dwarf_.compilation_units()) {
         if (!die_pc_range(cu.root()).contains(pc)) continue;
 
@@ -331,7 +435,7 @@ void Debugger::setBreakpointAtFunction(std::string f_name) {
         for (auto &die : cu.root()) {
             if (!die.has(dwarf::DW_AT::name) || at_name(die) != f_name) continue;
             auto low_pc = at_low_pc(die);
-            auto entry = getEntryFromPC(low_pc);
+            auto entry = getLineEntryFromPC(low_pc);
             ++entry; 
             setBreakpoint(entry->address);
             std::cout << "Breakpoint set on function " << f_name 

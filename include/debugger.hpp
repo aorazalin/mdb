@@ -58,7 +58,8 @@ public:
     void whichLine();
 
     // get #line number
-    dwarf::line_table::iterator getEntryFromPC(uint64_t pc);
+
+    dwarf::line_table::iterator getLineEntryFromPC(uint64_t pc);
 
     void setBreakpointAtFunction(std::string f_name);
 
@@ -70,6 +71,8 @@ public:
 
     uint64_t offsetLoadAddress(uint64_t addr);
 
+		uint64_t offsetDwarfAddress(uint64_t addr);
+
     void printSource(const std::string &file_name,
                                unsigned line,
                                unsigned n_lines_context = 2);
@@ -77,6 +80,23 @@ public:
     siginfo_t getSignalInfo(); 
 
     void handleSigtrap(siginfo_t info); 
+
+    void singleStepWithBreakpointCheck();
+
+    void singleStep();
+
+		uint64_t getOffsetPC();
+
+		void stepOut();
+
+		void stepIn();
+
+		void stepOver();
+
+		void removeBreakpoint(std::intptr_t remove_addr);
+
+		dwarf::die getFunctionFromPC(uint64_t pc);
+
 private:
     std::unordered_map<intptr_t, Breakpoint> breakpoints_;
     std::string prog_name_;
