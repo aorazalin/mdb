@@ -70,4 +70,6 @@ compile.sh
 debug.sh
 
 # my local file to log all errors
-error.log
+.DS_Store
+Thumbs.db
+*.log

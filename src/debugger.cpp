@@ -437,9 +437,7 @@ void Debugger::setBreakpointAtFunction(std::string f_name) {
             auto low_pc = at_low_pc(die);
             auto entry = getLineEntryFromPC(low_pc);
             ++entry; 
-            setBreakpoint(entry->address);
-            std::cout << "Breakpoint set on function " << f_name 
-                      << std::endl;
+            setBreakpoint(offsetDwarfAddress(entry->address));
             return;
         }
     }
@@ -473,13 +471,13 @@ void Debugger::readVariable(std::string v_name) {
 void Debugger::setBreakpointAtLine(unsigned b_line,
         const std::string &filename) {
     for (const auto &cu : dwarf_.compilation_units()) {
-       if (!isSuffix(filename, at_name(cu.root()))) continue; 
+       if (!isSuffix(filename, at_name(cu.root()))) continue; //TODO use path finding API
 
        const auto& lt = cu.get_line_table();
 
        for (const auto &entry : lt) {
            if (!entry.is_stmt || entry.line != b_line) continue;
-           setBreakpoint(entry.address);
+           setBreakpoint(offsetDwarfAddress(entry.address));
            return;
        }
     }
