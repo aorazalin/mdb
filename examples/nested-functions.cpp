@@ -1,20 +1,22 @@
-#include<iostream>
-
-
-void log(std::string msg) {
-    std::cout << msg << "\n";
+void foo4() {
+		int a = 3;
 }
 
-long compute(long b, long c) {
-    log("computing addition of b and c");
-    return b + c;
+void foo3() {
+		int a = 4;
+		foo4();
+}
+
+void foo2() {
+		int a = 5;
+		foo3();
+}
+
+void foo1() {
+		int a = 6;
+		foo2();
 }
 
 int main() {
-    long b = 3, c = -2;
-    long a = compute(b, c); 
+		foo1();
 }
-
-
-//doesn't work if <log> func is an inline function
-//TODO make it work with inline functions
