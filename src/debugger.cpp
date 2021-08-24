@@ -483,18 +483,25 @@ void Debugger::readVariable(std::string v_name) {
 
 void Debugger::setBreakpointAtLine(const std::string &filename,
 																   unsigned b_line)  {
+		bool noFile = true;
     for (const auto &cu : dwarf_.compilation_units()) {
-       if (!isSuffix(filename, at_name(cu.root()))) continue; //TODO use path finding API
+				const char *p; size_t length;
+				cwk_path_get_basename(at_name(cu.root()).c_str(), &p, &length);
+				if (p != filename) continue;
+				noFile = false;	
 
-       const auto& lt = cu.get_line_table();
+        const auto& lt = cu.get_line_table();
 
-       for (const auto &entry : lt) {
-           if (!entry.is_stmt || entry.line != b_line) continue;
-           setBreakpointAtAddress(offsetDwarfAddress(entry.address));
-           return;
-       }
-    }
-    throw std::out_of_range("setBreakpointAtLine");
+        for (const auto &entry : lt) {
+            if (!entry.is_stmt || entry.line != b_line) continue;
+            setBreakpointAtAddress(offsetDwarfAddress(entry.address));
+            return;
+        }
+     }
+		if (noFile)
+				std::cerr << "File doesn't exist" << std::endl;
+		else
+				std::cerr << "Line out of range" << std::endl;
 }
 
 siginfo_t Debugger::getSignalInfo() {
