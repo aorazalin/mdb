@@ -102,6 +102,8 @@ public:
 
 		void loadSymbols();
 
+		void printBacktrace();
+
 private:
     std::unordered_map<intptr_t, Breakpoint> breakpoints_;
     std::string prog_name_;

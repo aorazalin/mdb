@@ -18,24 +18,22 @@ add_executable(${PROJECT_NAME} src/main.cpp
                                src/helper.cpp
                                external/linenoise/linenoise.c)
 
-														 # set_target_properties(${PROJECT_NAME} # tobecommented
-														 #	PROPERTIES COMPILE_OPTIONS "-g")
 
 add_executable(hello examples/hello.cpp)
 set_target_properties(hello
-	PROPERTIES COMPILE_FLAGS "-g -O0")
+	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer")
 
 add_executable(simpleadd examples/simpleadd.cpp)
 set_target_properties(simpleadd
-	PROPERTIES COMPILE_FLAGS "-g -O0")
+	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer")
 
 add_executable(cerrs examples/cerrs.cpp)
 set_target_properties(cerrs
-	PROPERTIES COMPILE_FLAGS "-g -O0")
+	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer")
 
 add_executable(couts examples/couts.cpp)
 set_target_properties(couts
-	PROPERTIES COMPILE_FLAGS "-g -O0")
+	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer")
 
 add_executable(function examples/function.cpp)
 set_target_properties(function

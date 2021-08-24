@@ -535,5 +535,9 @@ void Debugger::loadSymbols() {
 		}
 }
 
-
-
+void Debugger::printBacktrace() {
+		auto outputFrame = [frame_number = 0] (auto &&func) mutable {
+				std::cout << "frame #" << frame_number++ << ": 0x" << dwarf::at_low_pc(func)
+						      << ' ' << dwarf::at_name(func) << std::endl;
+		};
+}
