@@ -2,6 +2,7 @@
 #include "helper.hpp"
 
 #include "linenoise.h"
+#include "cwalk.h"
 
 #include <sys/wait.h>
 #include <sys/ptrace.h>

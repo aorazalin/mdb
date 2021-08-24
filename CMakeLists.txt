@@ -58,4 +58,9 @@ target_link_libraries(${PROJECT_NAME}
 
 add_dependencies(${PROJECT_NAME} libelfin)
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/cwalk)
+
+target_link_libraries(${PROJECT_NAME} cwalk)
+
+
 
