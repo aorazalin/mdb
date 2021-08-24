@@ -18,8 +18,8 @@ Debugger::Debugger (std::string prog_name, pid_t pid)
     auto fd = open(prog_name_.c_str(), O_RDONLY);
     this->elf_ = elf::elf(elf::create_mmap_loader(fd));
     this->dwarf_  = dwarf::dwarf(dwarf::elf::create_loader(elf_));
+		loadSymbols();
 }
-
 
 void Debugger::run() {
     waitForSignal();
@@ -77,15 +77,20 @@ void Debugger::handleCommand(const std::string& line) {
         continueExecution();
     } 
     else if (isPrefix(command, "break")) {
-        // break pc <memorylocation>
-        // break line <linenumber>
         if (isHexNum(args[1])) {
             std::string addr {args[1], 2}; // 0xNUMSEQ->NUMSEQ
-            setBreakpoint(std::stol(addr, 0, 16));
+            setBreakpointAtAddress(std::stol(addr, 0, 16));
             std::cout << "Set breakpoint at address 0x" 
                       << std::hex << addr << std::endl;
        
         }
+				else if (args[1].find(':') != std::string::npos) {
+						auto file_and_line = split(args[1], ':');
+						setBreakpointAtLine(file_and_line[0], std::stoi(file_and_line[1]));
+				}
+				else {
+						setBreakpointAtFunction(args[1]);
+				}
     }
     else if (isPrefix(command, "register")) {
         if (isPrefix(args[1], "dump")) {
@@ -131,6 +136,13 @@ void Debugger::handleCommand(const std::string& line) {
 		}
 		else if (isPrefix(command, "finish")) {
 				stepOut();
+		}
+		else if (isPrefix(command, "symbol")) {
+				auto syms = lookupSymbol(args[1]);
+				for (auto &&s : syms) {
+						std::cout << s.name << " " << toString(s.type) << " 0x" 
+										  << std::hex << s.addr << std::endl;
+				}
 		}
     else {
         std::cerr << "Invalid command" << std::endl;
@@ -189,7 +201,7 @@ void Debugger::continueExecution() {
 }
 
 
-void Debugger::setBreakpoint(intptr_t at_addr) {
+void Debugger::setBreakpointAtAddress(intptr_t at_addr) {
     Breakpoint bp {pid_, at_addr};
     bp.enable();
     breakpoints_[at_addr] = bp;
@@ -317,7 +329,7 @@ void Debugger::stepOut() {
 
     bool shouldRemoveBreakpoint = false;
     if (!breakpoints_.count(return_addr)) {
-        setBreakpoint(return_addr);
+        setBreakpointAtAddress(return_addr);
         shouldRemoveBreakpoint = true;
     }
 
@@ -375,7 +387,7 @@ void Debugger::stepOver() {
         auto load_address = offsetDwarfAddress(line->address);
         if (line->address != start_line->address 
                 && !breakpoints_.count(load_address)) {
-            setBreakpoint(load_address);
+            setBreakpointAtAddress(load_address);
             to_delete.push_back(load_address);
         }
        ++line;
@@ -384,7 +396,7 @@ void Debugger::stepOver() {
     auto frame_ptr = getRegisterValue(pid_, Reg::rbp);
     auto return_addr = readMemory(frame_ptr + 8);
     if (!breakpoints_.count(return_addr)) {
-				setBreakpoint(return_addr);
+				setBreakpointAtAddress(return_addr);
 				to_delete.push_back(return_addr);
     }
 
@@ -437,7 +449,7 @@ void Debugger::setBreakpointAtFunction(std::string f_name) {
             auto low_pc = at_low_pc(die);
             auto entry = getLineEntryFromPC(low_pc);
             ++entry; 
-            setBreakpoint(offsetDwarfAddress(entry->address));
+            setBreakpointAtAddress(offsetDwarfAddress(entry->address));
             return;
         }
     }
@@ -468,8 +480,8 @@ void Debugger::readVariable(std::string v_name) {
               << v_name << std::endl;
 }
 
-void Debugger::setBreakpointAtLine(unsigned b_line,
-        const std::string &filename) {
+void Debugger::setBreakpointAtLine(const std::string &filename,
+																   unsigned b_line)  {
     for (const auto &cu : dwarf_.compilation_units()) {
        if (!isSuffix(filename, at_name(cu.root()))) continue; //TODO use path finding API
 
@@ -477,7 +489,7 @@ void Debugger::setBreakpointAtLine(unsigned b_line,
 
        for (const auto &entry : lt) {
            if (!entry.is_stmt || entry.line != b_line) continue;
-           setBreakpoint(offsetDwarfAddress(entry.address));
+           setBreakpointAtAddress(offsetDwarfAddress(entry.address));
            return;
        }
     }
@@ -489,3 +501,31 @@ siginfo_t Debugger::getSignalInfo() {
     ptrace(PTRACE_GETSIGINFO, pid_, nullptr, &info);
     return info;
 }
+
+std::vector<Symbol> Debugger::lookupSymbol(const std::string &name) {
+		if (symbols_.count(name)) return symbols_[name];
+		return {};
+}
+
+void Debugger::loadSymbols() {
+
+		auto isSymbolTable = [](const elf::section &sec) {
+				return sec.get_hdr().type == elf::sht::symtab || 
+						   sec.get_hdr().type == elf::sht::dynsym;
+		};
+
+		for (auto &sec : elf_.sections()) {
+				if (!isSymbolTable(sec)) continue;
+
+				for (auto sym : sec.as_symtab()) {
+						auto &data = sym.get_data();
+						Symbol my_sym{toSymbolType(data.type()),
+												  sym.get_name(),
+													data.value};
+						symbols_[sym.get_name()].push_back(my_sym);
+				}
+		}
+}
+
+
+

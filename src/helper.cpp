@@ -26,6 +26,29 @@ bool isPrefix(const std::string &s, const std::string &of) {
     return std::equal(s.begin(), s.end(), of.begin());
 }
 
+SymbolType toSymbolType(elf::stt sym) {
+		switch (sym) {
+				case elf::stt::notype: return SymbolType::notype;
+				case elf::stt::object: return SymbolType::object;
+				case elf::stt::func: return SymbolType::func;
+				case elf::stt::section: return SymbolType::section;
+				case elf::stt::file: return SymbolType::file;
+				default: return SymbolType::notype;
+		}
+}
+
+
+std::string toString(SymbolType st) {
+		switch(st) {
+				case SymbolType::notype: return "notype";
+				case SymbolType::object: return "object";
+				case SymbolType::func: return "func";
+				case SymbolType::section: return "section";
+				case SymbolType::file: return "file";
+		}
+}
+
+
 bool isSuffix(const std::string &s, const std::string &of) {
     if (s.size() > of.size()) return false;
     auto offset = of.end() - (of.begin() + s.size());

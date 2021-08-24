@@ -5,6 +5,7 @@
 #include "elf++.hh"
 
 #include "breakpoint.hpp"
+#include "helper.hpp"
 
 #include <string>
 #include <unordered_map>
@@ -27,7 +28,7 @@ public:
     void continueExecution();
 
     // Setting breakpoint at a given address
-    void setBreakpoint(intptr_t at_addr);
+    void setBreakpointAtAddress(intptr_t at_addr);
 
     // Printout values of all registers
     void dumpRegisters();
@@ -65,7 +66,7 @@ public:
 
     void readVariable(std::string v_name);
 
-    void setBreakpointAtLine(unsigned line_number, const std::string &filename);
+    void setBreakpointAtLine(const std::string &filename, unsigned line_number);
 
     void initLoadAddress();
 
@@ -97,6 +98,9 @@ public:
 
 		dwarf::die getFunctionFromPC(uint64_t pc);
 
+		std::vector<Symbol> lookupSymbol(const std::string &name);
+
+		void loadSymbols();
 
 private:
     std::unordered_map<intptr_t, Breakpoint> breakpoints_;
@@ -105,6 +109,7 @@ private:
     uint64_t load_addr_{0};
     elf::elf elf_;
     dwarf::dwarf dwarf_;
+		std::unordered_map<std::string, std::vector<Symbol>> symbols_;
 };
 
 #endif

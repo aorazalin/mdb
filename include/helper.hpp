@@ -59,6 +59,24 @@ const std::array<RegDescriptor, n_registers> g_register_descriptors {{
     { Reg::gs, 55, "gs" },
 }};
 
+enum class SymbolType{
+		notype,
+		object,
+		func,
+		section,
+		file
+};
+
+std::string toString(SymbolType st);
+
+struct Symbol {
+		SymbolType type;
+		std::string name;
+		std::uintptr_t addr;
+};
+
+SymbolType toSymbolType(elf::stt sym);
+
 // Return name of the register given Reg object
 std::string getRegisterName(Reg);
 
