@@ -23,8 +23,8 @@ add_executable(hello examples/hello.cpp)
 set_target_properties(hello
 	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer")
 
-add_executable(simpleadd examples/simpleadd.cpp)
-set_target_properties(simpleadd
+add_executable(add examples/add.cpp)
+set_target_properties(add
 	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer")
 
 add_executable(cerrs examples/cerrs.cpp)
