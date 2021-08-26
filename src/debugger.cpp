@@ -45,7 +45,6 @@ void Debugger::initLoadAddress() {
         // <8bit> - <8bit>
         load_addr_ = std::stoi(addr, 0, 16);
     }
-    std::cout << "Load Address: " << load_addr_ << std::endl;
 }
 
 void Debugger::singleStep() {
@@ -81,9 +80,6 @@ void Debugger::handleCommand(const std::string& line) {
         if (isHexNum(args[1])) {
             std::string addr {args[1], 2}; // 0xNUMSEQ->NUMSEQ
             setBreakpointAtAddress(std::stol(addr, 0, 16));
-            std::cout << "Set breakpoint at address 0x" 
-                      << std::hex << addr << std::endl;
-       
         }
 				else if (args[1].find(':') != std::string::npos) {
 						auto file_and_line = split(args[1], ':');
@@ -209,6 +205,8 @@ void Debugger::setBreakpointAtAddress(intptr_t at_addr) {
     Breakpoint bp {pid_, at_addr};
     bp.enable();
     breakpoints_[at_addr] = bp;
+		std::cout << "Set breakpoint at address 0x" 
+							<< std::hex << at_addr << std::endl;
 }
 
 //TODO try process_vm_readv, process_vm_writev or /proc/<pid>/mem instead
@@ -551,9 +549,9 @@ void Debugger::printBacktrace() {
 		auto return_addr = readMemory(frame_ptr + 8);
 		
 		while (dwarf::at_name(current_func) != "main") {
-				current_func = getFunctionFromPC(return_addr);
+				current_func = getFunctionFromPC(offsetLoadAddress(return_addr));
 				outputFrame(current_func);
-				auto frame_ptr = getRegisterValue(pid_, Reg::rbp);
-				auto return_addr = readMemory(frame_ptr + 8);
+				frame_ptr = readMemory(frame_ptr);
+				return_addr = readMemory(frame_ptr + 8);
 		}
 }
