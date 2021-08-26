@@ -145,6 +145,9 @@ void Debugger::handleCommand(const std::string& line) {
 										  << std::hex << s.addr << std::endl;
 				}
 		}
+		else if (isPrefix(command, "backtrace")) {
+				printBacktrace();
+		}
     else {
         std::cerr << "Invalid command" << std::endl;
     }
@@ -540,4 +543,17 @@ void Debugger::printBacktrace() {
 				std::cout << "frame #" << frame_number++ << ": 0x" << dwarf::at_low_pc(func)
 						      << ' ' << dwarf::at_name(func) << std::endl;
 		};
+
+		auto current_func = getFunctionFromPC(offsetLoadAddress(get_pc()));
+		outputFrame(current_func);
+
+		auto frame_ptr = getRegisterValue(pid_, Reg::rbp);
+		auto return_addr = readMemory(frame_ptr + 8);
+		
+		while (dwarf::at_name(current_func) != "main") {
+				current_func = getFunctionFromPC(return_addr);
+				outputFrame(current_func);
+				auto frame_ptr = getRegisterValue(pid_, Reg::rbp);
+				auto return_addr = readMemory(frame_ptr + 8);
+		}
 }

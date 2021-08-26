@@ -39,8 +39,8 @@ add_executable(function examples/function.cpp)
 set_target_properties(function
 	PROPERTIES COMPILE_FLAGS  "-g -O0")
 
-add_executable(nested-functions examples/nested-functions.cpp)
-set_target_properties(nested-functions
+add_executable(nested examples/nested.cpp)
+set_target_properties(nested
 	PROPERTIES COMPILE_FLAGS "-g -O0")
 
 # run make in libelfin
