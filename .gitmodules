@@ -1,6 +1,3 @@
-[submodule "external/linenoise"]
-	path = external/linenoise
-	url = https://github.com/antirez/linenoise.git
 [submodule "external/cwalk"]
 	path = external/cwalk
 	url = https://github.com/likle/cwalk.git
