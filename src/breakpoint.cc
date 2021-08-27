@@ -1,7 +1,7 @@
 #include <sys/ptrace.h>
 
-#include "breakpoint.hpp"
-#include "helper.hpp"
+#include "breakpoint.hh"
+#include "helper.hh"
 
 void Breakpoint::enable() {
     auto data = ptrace(PTRACE_PEEKDATA, pid_, addr_, nullptr);

@@ -1,5 +1,5 @@
-#include "debugger.hpp"
-#include "helper.hpp"
+#include "debugger.hh"
+#include "helper.hh"
 
 #include "linenoise.h"
 #include "cwalk.h"

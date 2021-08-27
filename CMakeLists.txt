@@ -12,34 +12,34 @@ include_directories(external/linenoise/
 
 link_directories(src/)
 
-add_executable(${PROJECT_NAME} src/main.cpp 
-                               src/debugger.cpp 
-                               src/breakpoint.cpp 
-                               src/helper.cpp
+add_executable(${PROJECT_NAME} src/main.cc 
+                               src/debugger.cc 
+                               src/breakpoint.cc 
+                               src/helper.cc
                                external/linenoise/linenoise.c)
 
 
-add_executable(hello examples/hello.cpp)
+add_executable(hello examples/hello.cc)
 set_target_properties(hello
 	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
 
-add_executable(add examples/add.cpp)
+add_executable(add examples/add.cc)
 set_target_properties(add
 	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
 
-add_executable(cerrs examples/cerrs.cpp)
+add_executable(cerrs examples/cerrs.cc)
 set_target_properties(cerrs
 	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
 
-add_executable(couts examples/couts.cpp)
+add_executable(couts examples/couts.cc)
 set_target_properties(couts
 	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
 
-add_executable(function examples/function.cpp)
+add_executable(function examples/function.cc)
 set_target_properties(function
 	PROPERTIES COMPILE_FLAGS  "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
 
-add_executable(nested examples/nested.cpp)
+add_executable(nested examples/nested.cc)
 set_target_properties(nested
 	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
 

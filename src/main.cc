@@ -9,7 +9,7 @@
 
 #include <linenoise.h>
 
-#include "debugger.hpp"
+#include "debugger.hh"
 
 //TODO --- add floating point & vector registers in the future
 

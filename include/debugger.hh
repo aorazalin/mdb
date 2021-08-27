@@ -4,8 +4,8 @@
 #include "dwarf++.hh"
 #include "elf++.hh"
 
-#include "breakpoint.hpp"
-#include "helper.hpp"
+#include "breakpoint.hh"
+#include "helper.hh"
 
 #include <string>
 #include <unordered_map>

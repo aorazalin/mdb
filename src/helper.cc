@@ -7,7 +7,7 @@
 #include <sys/user.h>
 #include <inttypes.h>
 
-#include "helper.hpp"
+#include "helper.hh"
 
 std::vector<std::string> split(const std::string &s, char delimiter) {
     std::vector<std::string> out{};
