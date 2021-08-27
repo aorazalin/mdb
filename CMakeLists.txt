@@ -21,27 +21,27 @@ add_executable(${PROJECT_NAME} src/main.cpp
 
 add_executable(hello examples/hello.cpp)
 set_target_properties(hello
-	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer")
+	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
 
 add_executable(add examples/add.cpp)
 set_target_properties(add
-	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer")
+	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
 
 add_executable(cerrs examples/cerrs.cpp)
 set_target_properties(cerrs
-	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer")
+	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
 
 add_executable(couts examples/couts.cpp)
 set_target_properties(couts
-	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer")
+	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
 
 add_executable(function examples/function.cpp)
 set_target_properties(function
-	PROPERTIES COMPILE_FLAGS  "-g -O0")
+	PROPERTIES COMPILE_FLAGS  "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
 
 add_executable(nested examples/nested.cpp)
 set_target_properties(nested
-	PROPERTIES COMPILE_FLAGS "-g -O0")
+	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
 
 # run make in libelfin
 add_custom_target(
