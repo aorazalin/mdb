@@ -46,6 +46,7 @@ std::string toString(SymbolType st) {
 				case SymbolType::section: return "section";
 				case SymbolType::file: return "file";
 		}
+		return "";
 }
 
 
