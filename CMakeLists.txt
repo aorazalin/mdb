@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13.4)
 
-project(my-debugger)
+project(mdb)
 
 # add_compile_options(-std=c++14)
 
@@ -33,6 +33,10 @@ set_target_properties(function
 
 add_executable(nested examples/nested.cc)
 set_target_properties(nested
+	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
+
+add_executable(variables examples/variables.cc)
+set_target_properties(variables
 	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
 
 # run make in libelfin
