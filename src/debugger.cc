@@ -262,8 +262,11 @@ void Debugger::waitForSignal() {
             std::cout << "Good old segfault. Why: " << siginfo.si_code
                       << std::endl;
             break;
-        default:
-            std::cout << "Got signal: " << strsignal(siginfo.si_signo)
+				case 0:
+						std::cout << "Program finished" << std::endl;
+						exit(0);
+				default:
+						std::cout << "Got signal: " << strsignal(siginfo.si_signo)
                       << std::endl;
     }
 }
@@ -283,9 +286,12 @@ void Debugger::handleSigtrap(siginfo_t info) {
             printSource(line_entry->file->path, line_entry->line);
             return;
         }
-        case TRAP_TRACE: {
-            return;
-        }
+				// single stepping signal
+        case TRAP_TRACE:
+				// when debugger&debuggee start
+				case SI_USER: {
+						return;
+				}
         default: {
             std::cout << "Unknown signal with code " << info.si_code
                       << std::endl;
@@ -364,7 +370,6 @@ void Debugger::stepIn() {
 
 dwarf::die Debugger::getFunctionFromPC(uint64_t pc) {
 		//TODO add recursion for an actual search
-		//
 		for (auto &cu : dwarf_.compilation_units()) {
 				if (die_pc_range(cu.root()).contains(pc)) {
 						for (auto &d : cu.root()) 
