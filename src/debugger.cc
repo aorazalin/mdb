@@ -1,5 +1,6 @@
 #include "debugger.hh"
 #include "helper.hh"
+#include "ptrace-expr-context.hh"
 
 #include "linenoise.h"
 #include "cwalk.h"
@@ -27,7 +28,7 @@ void Debugger::run() {
     initLoadAddress();
     
     char *line = nullptr;
-    while ((line = linenoise("minidbg> ")) != nullptr) {
+    while ((line = linenoise("(mdb) ")) != nullptr) {
         handleCommand(line);
         linenoiseHistoryAdd(line);
         linenoiseFree(line);
@@ -143,6 +144,9 @@ void Debugger::handleCommand(const std::string& line) {
 		}
 		else if (isPrefix(command, "backtrace")) {
 				printBacktrace();
+		}
+		else if (isPrefix(command, "variables")) {
+				readVariables();
 		}
     else {
         std::cerr << "Invalid command" << std::endl;
@@ -553,5 +557,37 @@ void Debugger::printBacktrace() {
 				outputFrame(current_func);
 				frame_ptr = readMemory(frame_ptr);
 				return_addr = readMemory(frame_ptr + 8);
+		}
+}
+
+void Debugger::readVariables() {
+		using namespace dwarf;
+
+		auto func = getFunctionFromPC(getOffsetPC());
+		for (const auto &die : func) {
+				if (die.tag != DW_TAG::variable) continue;
+
+				auto loc_val = die[DW_AT::location];
+				if (loc_val.get_type() != value::type::exprloc) continue;
+
+				PtraceExprContext context {pid_};
+				auto result = loc_val.as_exprloc().evaluate(&context);
+				
+				switch(result.location_type) {
+				case expr_result::type::address: {
+						auto value = readMemory(result.value);
+						std::cout << at_name(die) << " (0x" << std::hex << result.value
+										  << ") = " << value << std::endl;
+						break; //NOTSURE
+				}
+				case expr_result::type::reg: {
+						auto value = getRegisterValueFromDwarfRegister(pid_, result.value);
+						std::cout << at_name(die) << " (reg " << result.value << ") = "
+										  << value << std::endl;
+						break;
+				}
+				default:
+						throw std::runtime_error("Unhandled variable location");
+				}
 		}
 }

@@ -19,16 +19,8 @@ add_executable(${PROJECT_NAME} src/main.cc
                                external/linenoise/linenoise.c)
 
 
-add_executable(hello examples/hello.cc)
-set_target_properties(hello
-	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
-
 add_executable(add examples/add.cc)
 set_target_properties(add
-	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
-
-add_executable(cerrs examples/cerrs.cc)
-set_target_properties(cerrs
 	PROPERTIES COMPILE_FLAGS "-g -O0 -fno-omit-frame-pointer -gdwarf-2")
 
 add_executable(couts examples/couts.cc)

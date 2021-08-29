@@ -1,5 +1,5 @@
-#ifndef BREAKPOINT_HPP
-#define BREAKPOINT_HPP
+#ifndef BREAKPOINT_HH
+#define BREAKPOINT_HH
 
 #include <sys/types.h>
 #include <stdint.h>

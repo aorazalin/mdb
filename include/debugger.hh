@@ -1,5 +1,5 @@
-#ifndef DEBUGGER_HPP
-#define DEBUGGER_HPP
+#ifndef DEBUGGER_HH
+#define DEBUGGER_HH
 
 #include "dwarf++.hh"
 #include "elf++.hh"
@@ -104,6 +104,7 @@ public:
 
 		void printBacktrace();
 
+		void readVariables();
 private:
     std::unordered_map<intptr_t, Breakpoint> breakpoints_;
     std::string prog_name_;
