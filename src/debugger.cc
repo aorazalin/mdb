@@ -148,6 +148,13 @@ void Debugger::handleCommand(const std::string& line) {
 		else if (isPrefix(command, "variables")) {
 				readVariables();
 		}
+		else if (isPrefix(command, "clear")) {
+				linenoiseClearScreen();
+		}
+		else if (isPrefix(command, "exit")) {
+				kill(pid_, SIGTERM);
+				exit(0);
+		}
     else {
         std::cerr << "Invalid command" << std::endl;
     }
@@ -263,7 +270,7 @@ void Debugger::waitForSignal() {
                       << std::endl;
             break;
 				case 0:
-						std::cout << "Program finished" << std::endl;
+						//std::cout << "Program finished" << std::endl;
 						exit(0);
 				default:
 						std::cout << "Got signal: " << strsignal(siginfo.si_signo)
