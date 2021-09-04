@@ -145,7 +145,11 @@ void Debugger::handleCommand(const std::string& line) {
 		else if (isPrefix(command, "backtrace")) {
 				printBacktrace();
 		}
-		else if (isPrefix(command, "variables")) {
+		else if (isPrefix(command, "var")) {
+				std::string var_name = args[1];
+				readVariable(var_name);
+		}
+		else if (isPrefix(command, "allvars")) {
 				readVariables();
 		}
 		else if (isPrefix(command, "clear")) {
@@ -475,29 +479,6 @@ void Debugger::setBreakpointAtFunction(std::string f_name) {
               << f_name << std::endl;
 }
 
-void Debugger::readVariable(std::string v_name) {
-
-    std::function<bool(const dwarf::die &)> depthSearch;
-    depthSearch = [&depthSearch,v_name](const dwarf::die &die) {
-        if (die.tag == dwarf::DW_TAG::variable
-                && at_name(die) == v_name) {
-            //TODO process DIE
-            dump_die(die);
-            return true;
-        }
-        
-        for (auto &child : die)
-            if (depthSearch(child)) return true;
-        return false;
-    };
-
-    for (auto &cu : dwarf_.compilation_units()) {
-        if (depthSearch(cu.root())) return;
-    }
-    std::cerr << "Couldn't find variable with name "
-              << v_name << std::endl;
-}
-
 void Debugger::setBreakpointAtLine(const std::string &filename,
 																   unsigned b_line)  {
 		bool noFile = true;
@@ -590,7 +571,7 @@ void Debugger::readVariables() {
 						auto value = readMemory(result.value);
 						std::cout << at_name(die) << " (0x" << std::hex << result.value
 										  << ") = " << value << std::endl;
-						break; //NOTSURE
+						break;
 				}
 				case expr_result::type::reg: {
 						auto value = getRegisterValueFromDwarfRegister(pid_, result.value);
@@ -602,4 +583,42 @@ void Debugger::readVariables() {
 						throw std::runtime_error("Unhandled variable location");
 				}
 		}
+}
+
+void Debugger::readVariable(std::string name) {
+		using namespace dwarf;
+		
+		bool found_name = false;
+		auto func = getFunctionFromPC(getOffsetPC());
+		for (const auto &die : func) {
+				if (die.tag != DW_TAG::variable || at_name(die) != name) continue;
+
+				auto loc_val = die[DW_AT::location];
+				//TODO read loclists
+				if (loc_val.get_type() != value::type::exprloc) continue;
+
+				PtraceExprContext context {pid_};
+				auto result = loc_val.as_exprloc().evaluate(&context);
+				
+				found_name = true;
+				switch(result.location_type) {
+				case expr_result::type::address: {
+						auto value = readMemory(result.value);
+						std::cout << at_name(die) << " (0x" << std::hex << result.value
+										  << ") = " << value << std::endl;
+						break; 
+				}
+				case expr_result::type::reg: {
+						auto value = getRegisterValueFromDwarfRegister(pid_, result.value);
+						std::cout << at_name(die) << " (reg " << result.value << ") = "
+										  << value << std::endl;
+						break;
+				}
+				default:
+						throw std::runtime_error("Unhandled variable location");
+				}
+		}
+
+		if (!found_name) std::cerr << "Couldn't find variable with the given name"
+														   << std::endl;
 }

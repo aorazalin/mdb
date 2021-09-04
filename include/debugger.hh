@@ -64,8 +64,6 @@ public:
 
     void setBreakpointAtFunction(std::string f_name);
 
-    void readVariable(std::string v_name);
-
     void setBreakpointAtLine(const std::string &filename, unsigned line_number);
 
     void initLoadAddress();
@@ -105,6 +103,8 @@ public:
 		void printBacktrace();
 
 		void readVariables();
+
+		void readVariable(std::string name);
 private:
     std::unordered_map<intptr_t, Breakpoint> breakpoints_;
     std::string prog_name_;
