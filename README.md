@@ -21,6 +21,9 @@ Then, simply run debugger like this:
 /path/to/mdb_executable your_executable
 ```
 
+## How to use
+See `handleCommand` function in `debugger.cc` for details.
+
 ## Acknowledgment
 * Huge thanks to [Tartan Llama](https://github.com/TartanLlama) for the
 [tutorial](https://blog.tartanllama.xyz/)
