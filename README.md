@@ -10,7 +10,7 @@ Mini C++ debugger for Linux with basic debugging operations:
 ## Installation
 After cloning the repository, run cmake:
 ```
-cmake -DCMAKE_CXX_COMPILER=$(which clang++) -DCMAKE_C_COMPILER=$(which clang) -S <source_folder> -B <build_folder>
+cmake -DCMAKE_CXX_COMPILER="$(which clang++)" -DCMAKE_C_COMPILER="$(which clang)" -S <source_folder> -B <build_folder>
 ```
 
 ## How to debug
